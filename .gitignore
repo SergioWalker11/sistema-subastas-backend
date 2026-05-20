@@ -1,0 +1,22 @@
+# Build artifacts
+[Bb]in/
+[Oo]bj/
+
+# IDE folders
+.vs/
+.vscode/
+.idea/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs/temp
+*.log
+*.tmp
+
+# OS files
+Thumbs.db
+.DS_Store
