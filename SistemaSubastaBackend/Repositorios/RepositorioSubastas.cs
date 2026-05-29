@@ -18,6 +18,7 @@ public class RepositorioSubastas : IRepositorioSubastas
     {
         return await _contexto.Subastas
             .Include(s => s.Producto)
+            .Include(s => s.Vendedor)
             .ToListAsync();
     }
 
@@ -25,6 +26,7 @@ public class RepositorioSubastas : IRepositorioSubastas
     {
         return await _contexto.Subastas
             .Include(s => s.Producto)
+            .Include(s => s.Vendedor)
             .FirstOrDefaultAsync(s => s.Id == id);
     }
 
@@ -46,7 +48,28 @@ public class RepositorioSubastas : IRepositorioSubastas
     {
         return await _contexto.Subastas
             .Include(s => s.Producto)
+            .Include(s => s.Vendedor)
             .Where(s => s.Estado == estado)
+            .ToListAsync();
+    }
+
+    public async Task<List<Subasta>> ObtenerPorVendedorAsync(int vendedorId)
+    {
+        return await _contexto.Subastas
+            .Include(s => s.Producto)
+            .Include(s => s.Vendedor)
+            .Include(s => s.Pujas)
+            .Where(s => s.VendedorId == vendedorId)
+            .ToListAsync();
+    }
+
+    public async Task<List<Subasta>> ObtenerTodasConPujasAsync()
+    {
+        return await _contexto.Subastas
+            .Include(s => s.Producto)
+            .Include(s => s.Vendedor)
+            .Include(s => s.Pujas)
+                .ThenInclude(p => p.Usuario)
             .ToListAsync();
     }
 }

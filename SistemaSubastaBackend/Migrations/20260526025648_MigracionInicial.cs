@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace SistemaSubastaBackend.Migraciones
+namespace SistemaSubastaBackend.Migrations
 {
     /// <inheritdoc />
     public partial class MigracionInicial : Migration
@@ -13,17 +13,17 @@ namespace SistemaSubastaBackend.Migraciones
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "productos",
+                name: "categorias",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Nombre = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
-                    Descripcion = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false)
+                    Nombre = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Descripcion = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_productos", x => x.Id);
+                    table.PrimaryKey("PK_categorias", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -41,27 +41,24 @@ namespace SistemaSubastaBackend.Migraciones
                 });
 
             migrationBuilder.CreateTable(
-                name: "subastas",
+                name: "productos",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ProductoId = table.Column<int>(type: "integer", nullable: false),
-                    PrecioInicial = table.Column<decimal>(type: "numeric(10,2)", nullable: false),
-                    PrecioActual = table.Column<decimal>(type: "numeric(10,2)", nullable: false),
-                    FechaInicio = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    FechaFin = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Estado = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
+                    Nombre = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    Descripcion = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    CategoriaId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_subastas", x => x.Id);
+                    table.PrimaryKey("PK_productos", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_subastas_productos_ProductoId",
-                        column: x => x.ProductoId,
-                        principalTable: "productos",
+                        name: "FK_productos_categorias_CategoriaId",
+                        column: x => x.CategoriaId,
+                        principalTable: "categorias",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -87,6 +84,28 @@ namespace SistemaSubastaBackend.Migraciones
                 });
 
             migrationBuilder.CreateTable(
+                name: "imagenes_producto",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ProductoId = table.Column<int>(type: "integer", nullable: false),
+                    RutaArchivo = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    EsPrincipal = table.Column<bool>(type: "boolean", nullable: false),
+                    Orden = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_imagenes_producto", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_imagenes_producto_productos_ProductoId",
+                        column: x => x.ProductoId,
+                        principalTable: "productos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "notificaciones",
                 columns: table => new
                 {
@@ -107,6 +126,37 @@ namespace SistemaSubastaBackend.Migraciones
                         principalTable: "usuarios",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "subastas",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ProductoId = table.Column<int>(type: "integer", nullable: false),
+                    VendedorId = table.Column<int>(type: "integer", nullable: false),
+                    PrecioInicial = table.Column<decimal>(type: "numeric(10,2)", nullable: false),
+                    PrecioActual = table.Column<decimal>(type: "numeric(10,2)", nullable: false),
+                    FechaInicio = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    FechaFin = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Estado = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_subastas", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_subastas_productos_ProductoId",
+                        column: x => x.ProductoId,
+                        principalTable: "productos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_subastas_usuarios_VendedorId",
+                        column: x => x.VendedorId,
+                        principalTable: "usuarios",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -168,6 +218,11 @@ namespace SistemaSubastaBackend.Migraciones
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_imagenes_producto_ProductoId",
+                table: "imagenes_producto",
+                column: "ProductoId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_notificaciones_UsuarioId",
                 table: "notificaciones",
                 column: "UsuarioId");
@@ -183,6 +238,11 @@ namespace SistemaSubastaBackend.Migraciones
                 column: "UsuarioId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_productos_CategoriaId",
+                table: "productos",
+                column: "CategoriaId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_pujas_SubastaId",
                 table: "pujas",
                 column: "SubastaId");
@@ -195,7 +255,17 @@ namespace SistemaSubastaBackend.Migraciones
             migrationBuilder.CreateIndex(
                 name: "IX_subastas_ProductoId",
                 table: "subastas",
-                column: "ProductoId",
+                column: "ProductoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_subastas_VendedorId",
+                table: "subastas",
+                column: "VendedorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_usuarios_Correo",
+                table: "usuarios",
+                column: "Correo",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -207,6 +277,9 @@ namespace SistemaSubastaBackend.Migraciones
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "imagenes_producto");
+
             migrationBuilder.DropTable(
                 name: "notificaciones");
 
@@ -220,10 +293,13 @@ namespace SistemaSubastaBackend.Migraciones
                 name: "subastas");
 
             migrationBuilder.DropTable(
+                name: "productos");
+
+            migrationBuilder.DropTable(
                 name: "usuarios");
 
             migrationBuilder.DropTable(
-                name: "productos");
+                name: "categorias");
 
             migrationBuilder.DropTable(
                 name: "roles");

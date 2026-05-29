@@ -27,7 +27,7 @@ public class ServicioNotificaciones : IServicioNotificaciones
             Titulo = dto.Titulo,
             Mensaje = dto.Mensaje,
             Leida = false,
-            FechaCreacion = DateTime.Now
+            FechaCreacion = DateTime.UtcNow
         };
 
         notificacion = await _repositorioNotificaciones.CrearAsync(notificacion);

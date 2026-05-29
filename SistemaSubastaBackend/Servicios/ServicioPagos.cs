@@ -55,7 +55,7 @@ public class ServicioPagos : IServicioPagos
             Monto = dto.Monto,
             CodigoTransaccion = resultado.CodigoTransaccion,
             EstadoPago = "aprobado",
-            FechaPago = DateTime.Now
+            FechaPago = DateTime.UtcNow
         };
 
         pago = await _repositorioPagos.CrearAsync(pago);

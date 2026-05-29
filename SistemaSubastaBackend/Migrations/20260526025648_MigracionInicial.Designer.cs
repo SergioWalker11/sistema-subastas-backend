@@ -9,10 +9,10 @@ using SistemaSubastaBackend.Datos;
 
 #nullable disable
 
-namespace SistemaSubastaBackend.Migraciones
+namespace SistemaSubastaBackend.Migrations
 {
     [DbContext(typeof(ContextoSubastas))]
-    [Migration("20260519220305_MigracionInicial")]
+    [Migration("20260526025648_MigracionInicial")]
     partial class MigracionInicial
     {
         /// <inheritdoc />
@@ -24,6 +24,58 @@ namespace SistemaSubastaBackend.Migraciones
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("SistemaSubastaBackend.Modelos.Categoria", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("categorias", (string)null);
+                });
+
+            modelBuilder.Entity("SistemaSubastaBackend.Modelos.ImagenProducto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("EsPrincipal")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RutaArchivo")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.ToTable("imagenes_producto", (string)null);
+                });
 
             modelBuilder.Entity("SistemaSubastaBackend.Modelos.Notificacion", b =>
                 {
@@ -106,6 +158,9 @@ namespace SistemaSubastaBackend.Migraciones
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CategoriaId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Descripcion")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -117,6 +172,8 @@ namespace SistemaSubastaBackend.Migraciones
                         .HasColumnType("character varying(150)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoriaId");
 
                     b.ToTable("productos", (string)null);
                 });
@@ -201,10 +258,14 @@ namespace SistemaSubastaBackend.Migraciones
                     b.Property<int>("ProductoId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("VendedorId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductoId")
-                        .IsUnique();
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("VendedorId");
 
                     b.ToTable("subastas", (string)null);
                 });
@@ -237,9 +298,23 @@ namespace SistemaSubastaBackend.Migraciones
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Correo")
+                        .IsUnique();
+
                     b.HasIndex("RolId");
 
                     b.ToTable("usuarios", (string)null);
+                });
+
+            modelBuilder.Entity("SistemaSubastaBackend.Modelos.ImagenProducto", b =>
+                {
+                    b.HasOne("SistemaSubastaBackend.Modelos.Producto", "Producto")
+                        .WithMany("Imagenes")
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
                 });
 
             modelBuilder.Entity("SistemaSubastaBackend.Modelos.Notificacion", b =>
@@ -272,6 +347,16 @@ namespace SistemaSubastaBackend.Migraciones
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("SistemaSubastaBackend.Modelos.Producto", b =>
+                {
+                    b.HasOne("SistemaSubastaBackend.Modelos.Categoria", "Categoria")
+                        .WithMany("Productos")
+                        .HasForeignKey("CategoriaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Categoria");
+                });
+
             modelBuilder.Entity("SistemaSubastaBackend.Modelos.Puja", b =>
                 {
                     b.HasOne("SistemaSubastaBackend.Modelos.Subasta", "Subasta")
@@ -294,12 +379,20 @@ namespace SistemaSubastaBackend.Migraciones
             modelBuilder.Entity("SistemaSubastaBackend.Modelos.Subasta", b =>
                 {
                     b.HasOne("SistemaSubastaBackend.Modelos.Producto", "Producto")
-                        .WithOne("Subasta")
-                        .HasForeignKey("SistemaSubastaBackend.Modelos.Subasta", "ProductoId")
+                        .WithMany("Subastas")
+                        .HasForeignKey("ProductoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("SistemaSubastaBackend.Modelos.Usuario", "Vendedor")
+                        .WithMany("Subastas")
+                        .HasForeignKey("VendedorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Producto");
+
+                    b.Navigation("Vendedor");
                 });
 
             modelBuilder.Entity("SistemaSubastaBackend.Modelos.Usuario", b =>
@@ -313,9 +406,16 @@ namespace SistemaSubastaBackend.Migraciones
                     b.Navigation("Rol");
                 });
 
+            modelBuilder.Entity("SistemaSubastaBackend.Modelos.Categoria", b =>
+                {
+                    b.Navigation("Productos");
+                });
+
             modelBuilder.Entity("SistemaSubastaBackend.Modelos.Producto", b =>
                 {
-                    b.Navigation("Subasta");
+                    b.Navigation("Imagenes");
+
+                    b.Navigation("Subastas");
                 });
 
             modelBuilder.Entity("SistemaSubastaBackend.Modelos.Rol", b =>
@@ -337,6 +437,8 @@ namespace SistemaSubastaBackend.Migraciones
                     b.Navigation("Pagos");
 
                     b.Navigation("Pujas");
+
+                    b.Navigation("Subastas");
                 });
 #pragma warning restore 612, 618
         }

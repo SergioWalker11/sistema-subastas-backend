@@ -11,7 +11,9 @@ public class ContextoSubastas : DbContext
 
     public DbSet<Rol> Roles { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
+    public DbSet<Categoria> Categorias { get; set; }
     public DbSet<Producto> Productos { get; set; }
+    public DbSet<ImagenProducto> ImagenesProducto { get; set; }
     public DbSet<Subasta> Subastas { get; set; }
     public DbSet<Puja> Pujas { get; set; }
     public DbSet<Pago> Pagos { get; set; }
@@ -31,6 +33,7 @@ public class ContextoSubastas : DbContext
         {
             entity.ToTable("usuarios");
             entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Correo).IsUnique();
             entity.Property(e => e.NombreCompleto).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Correo).IsRequired().HasMaxLength(150);
             entity.Property(e => e.ContrasenaHash).IsRequired().HasMaxLength(255);
@@ -39,12 +42,34 @@ public class ContextoSubastas : DbContext
                 .HasForeignKey(e => e.RolId);
         });
 
+        modelBuilder.Entity<Categoria>(entity =>
+        {
+            entity.ToTable("categorias");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Nombre).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Descripcion).HasMaxLength(200);
+        });
+
         modelBuilder.Entity<Producto>(entity =>
         {
             entity.ToTable("productos");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Nombre).IsRequired().HasMaxLength(150);
             entity.Property(e => e.Descripcion).HasMaxLength(500);
+            entity.HasOne(e => e.Categoria)
+                .WithMany(c => c.Productos)
+                .HasForeignKey(e => e.CategoriaId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<ImagenProducto>(entity =>
+        {
+            entity.ToTable("imagenes_producto");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.RutaArchivo).IsRequired().HasMaxLength(500);
+            entity.HasOne(e => e.Producto)
+                .WithMany(p => p.Imagenes)
+                .HasForeignKey(e => e.ProductoId);
         });
 
         modelBuilder.Entity<Subasta>(entity =>
@@ -57,8 +82,12 @@ public class ContextoSubastas : DbContext
             entity.Property(e => e.FechaFin).IsRequired();
             entity.Property(e => e.Estado).IsRequired().HasMaxLength(20);
             entity.HasOne(e => e.Producto)
-                .WithOne(p => p.Subasta)
-                .HasForeignKey<Subasta>(e => e.ProductoId);
+                .WithMany(p => p.Subastas)
+                .HasForeignKey(e => e.ProductoId);
+            entity.HasOne(e => e.Vendedor)
+                .WithMany(u => u.Subastas)
+                .HasForeignKey(e => e.VendedorId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Puja>(entity =>

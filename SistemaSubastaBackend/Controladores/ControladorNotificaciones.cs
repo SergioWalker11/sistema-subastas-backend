@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemaSubastaBackend.DTOs;
 using SistemaSubastaBackend.Interfaces;
@@ -17,6 +18,7 @@ public class ControladorNotificaciones : ControllerBase
     }
 
     [HttpGet("usuario/{usuarioId}")]
+    [Authorize]
     public async Task<IActionResult> ObtenerPorUsuario(int usuarioId)
     {
         var notificaciones = await _servicioNotificaciones.ObtenerPorUsuarioAsync(usuarioId);
@@ -52,6 +54,7 @@ public class ControladorNotificaciones : ControllerBase
     }
 
     [HttpGet("usuario/{usuarioId}/no-leidas")]
+    [Authorize]
     public async Task<IActionResult> ContarNoLeidas(int usuarioId)
     {
         var cantidad = await _servicioNotificaciones.ContarNoLeidasAsync(usuarioId);

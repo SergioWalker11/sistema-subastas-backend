@@ -14,20 +14,37 @@ public class RepositorioUsuarios : IRepositorioUsuarios
         _contexto = contexto;
     }
 
+    public async Task<List<Usuario>> ObtenerTodosAsync()
+    {
+        return await _contexto.Usuarios
+            .Include(u => u.Rol)
+            .ToListAsync();
+    }
+
     public async Task<Usuario?> ObtenerPorIdAsync(int id)
     {
-        return await _contexto.Usuarios.FindAsync(id);
+        return await _contexto.Usuarios
+            .Include(u => u.Rol)
+            .FirstOrDefaultAsync(u => u.Id == id);
     }
 
     public async Task<Usuario?> ObtenerPorCorreoAsync(string correo)
     {
         return await _contexto.Usuarios
+            .Include(u => u.Rol)
             .FirstOrDefaultAsync(u => u.Correo == correo);
     }
 
     public async Task<Usuario> CrearAsync(Usuario usuario)
     {
         _contexto.Usuarios.Add(usuario);
+        await _contexto.SaveChangesAsync();
+        return usuario;
+    }
+
+    public async Task<Usuario> ActualizarAsync(Usuario usuario)
+    {
+        _contexto.Usuarios.Update(usuario);
         await _contexto.SaveChangesAsync();
         return usuario;
     }

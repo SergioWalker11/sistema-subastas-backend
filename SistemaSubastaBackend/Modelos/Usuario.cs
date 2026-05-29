@@ -8,6 +8,7 @@ public class Usuario
     public string ContrasenaHash { get; set; } = string.Empty;
     public int RolId { get; set; }
     public Rol Rol { get; set; } = null!;
+    public ICollection<Subasta> Subastas { get; set; } = new List<Subasta>();
     public ICollection<Puja> Pujas { get; set; } = new List<Puja>();
     public ICollection<Pago> Pagos { get; set; } = new List<Pago>();
     public ICollection<Notificacion> Notificaciones { get; set; } = new List<Notificacion>();

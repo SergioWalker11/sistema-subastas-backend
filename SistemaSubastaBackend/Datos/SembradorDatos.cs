@@ -15,34 +15,43 @@ public static class SembradorDatos
         contexto.Roles.AddRange(rolAdmin, rolVendedor, rolComprador);
         contexto.SaveChanges();
 
-        var usuario1 = new Usuario { NombreCompleto = "Carlos Mendez", Correo = "carlos@demo.com", ContrasenaHash = "hash123", RolId = rolComprador.Id };
-        var usuario2 = new Usuario { NombreCompleto = "Ana Lopez", Correo = "ana@demo.com", ContrasenaHash = "hash456", RolId = rolVendedor.Id };
-        var usuario3 = new Usuario { NombreCompleto = "Pedro Ramirez", Correo = "pedro@demo.com", ContrasenaHash = "hash789", RolId = rolComprador.Id };
-        var usuario4 = new Usuario { NombreCompleto = "Maria Torres", Correo = "maria@demo.com", ContrasenaHash = "hash012", RolId = rolComprador.Id };
-        var usuario5 = new Usuario { NombreCompleto = "Luis Garcia", Correo = "luis@demo.com", ContrasenaHash = "hash345", RolId = rolVendedor.Id };
+        var hash = BCrypt.Net.BCrypt.HashPassword("123456");
+
+        var usuario1 = new Usuario { NombreCompleto = "Carlos Mendez", Correo = "carlos@demo.com", ContrasenaHash = hash, RolId = rolComprador.Id };
+        var usuario2 = new Usuario { NombreCompleto = "Ana Lopez", Correo = "ana@demo.com", ContrasenaHash = hash, RolId = rolVendedor.Id };
+        var usuario3 = new Usuario { NombreCompleto = "Pedro Ramirez", Correo = "pedro@demo.com", ContrasenaHash = hash, RolId = rolComprador.Id };
+        var usuario4 = new Usuario { NombreCompleto = "Maria Torres", Correo = "maria@demo.com", ContrasenaHash = hash, RolId = rolComprador.Id };
+        var usuario5 = new Usuario { NombreCompleto = "Luis Garcia", Correo = "luis@demo.com", ContrasenaHash = hash, RolId = rolVendedor.Id };
         contexto.Usuarios.AddRange(usuario1, usuario2, usuario3, usuario4, usuario5);
         contexto.SaveChanges();
 
-        var producto1 = new Producto { Nombre = "Laptop Gaming ASUS ROG", Descripcion = "Laptop gaming con procesador Intel i7, 16GB RAM, RTX 3060, pantalla 15.6 pulgadas 144Hz" };
-        var producto2 = new Producto { Nombre = "iPhone 15 Pro Max", Descripcion = "Apple iPhone 15 Pro Max 256GB, color titanio natural, nuevo sellado" };
-        var producto3 = new Producto { Nombre = "PlayStation 5 Edicion Digital", Descripcion = "Consola PlayStation 5 edition digital, incluye control DualSense" };
-        var producto4 = new Producto { Nombre = "Bicicleta Montaña Trek", Descripcion = "Bicicleta de montaña Trek Marlin 7, cuadro aluminio, suspension delantera" };
-        var producto5 = new Producto { Nombre = "Camara Canon EOS R6", Descripcion = "Camara mirrorless Canon EOS R6 Mark II, cuerpo solamente, 24.2MP" };
-        var producto6 = new Producto { Nombre = "Monitor Samsung 4K 32\"", Descripcion = "Monitor Samsung UHD 4K de 32 pulgadas, panel IPS, HDR10, USB-C" };
-        var producto7 = new Producto { Nombre = "Auriculares Sony WH-1000XM5", Descripcion = "Auriculares inalambricos con cancelacion de ruido, 30 horas de bateria" };
-        var producto8 = new Producto { Nombre = "Tablet iPad Air M2", Descripcion = "iPad Air con chip M2, 256GB, pantalla 11 pulgadas, color azul" };
+        var catElectronica = new Categoria { Nombre = "Electrónica", Descripcion = "Dispositivos electrónicos y gadgets" };
+        var catVehiculos = new Categoria { Nombre = "Vehículos", Descripcion = "Automóviles, motos y bicicletas" };
+        var catFotografia = new Categoria { Nombre = "Fotografía", Descripcion = "Cámaras, lentes y accesorios" };
+        var catAudio = new Categoria { Nombre = "Audio", Descripcion = "Equipos de sonido y auriculares" };
+        contexto.Categorias.AddRange(catElectronica, catVehiculos, catFotografia, catAudio);
+        contexto.SaveChanges();
+
+        var producto1 = new Producto { Nombre = "Laptop Gaming ASUS ROG", Descripcion = "Laptop gaming con procesador Intel i7, 16GB RAM, RTX 3060, pantalla 15.6 pulgadas 144Hz", CategoriaId = catElectronica.Id };
+        var producto2 = new Producto { Nombre = "iPhone 15 Pro Max", Descripcion = "Apple iPhone 15 Pro Max 256GB, color titanio natural, nuevo sellado", CategoriaId = catElectronica.Id };
+        var producto3 = new Producto { Nombre = "PlayStation 5 Edicion Digital", Descripcion = "Consola PlayStation 5 edition digital, incluye control DualSense", CategoriaId = catElectronica.Id };
+        var producto4 = new Producto { Nombre = "Bicicleta Montaña Trek", Descripcion = "Bicicleta de montaña Trek Marlin 7, cuadro aluminio, suspension delantera", CategoriaId = catVehiculos.Id };
+        var producto5 = new Producto { Nombre = "Camara Canon EOS R6", Descripcion = "Camara mirrorless Canon EOS R6 Mark II, cuerpo solamente, 24.2MP", CategoriaId = catFotografia.Id };
+        var producto6 = new Producto { Nombre = "Monitor Samsung 4K 32\"", Descripcion = "Monitor Samsung UHD 4K de 32 pulgadas, panel IPS, HDR10, USB-C", CategoriaId = catElectronica.Id };
+        var producto7 = new Producto { Nombre = "Auriculares Sony WH-1000XM5", Descripcion = "Auriculares inalambricos con cancelacion de ruido, 30 horas de bateria", CategoriaId = catAudio.Id };
+        var producto8 = new Producto { Nombre = "Tablet iPad Air M2", Descripcion = "iPad Air con chip M2, 256GB, pantalla 11 pulgadas, color azul", CategoriaId = catElectronica.Id };
         contexto.Productos.AddRange(producto1, producto2, producto3, producto4, producto5, producto6, producto7, producto8);
         contexto.SaveChanges();
 
         var ahora = DateTime.UtcNow;
-        var subasta1 = new Subasta { ProductoId = producto1.Id, PrecioInicial = 800.00m, PrecioActual = 950.00m, FechaInicio = ahora.AddDays(-2), FechaFin = ahora.AddDays(5), Estado = "activa" };
-        var subasta2 = new Subasta { ProductoId = producto2.Id, PrecioInicial = 900.00m, PrecioActual = 1050.00m, FechaInicio = ahora.AddDays(-1), FechaFin = ahora.AddDays(3), Estado = "activa" };
-        var subasta3 = new Subasta { ProductoId = producto3.Id, PrecioInicial = 350.00m, PrecioActual = 420.00m, FechaInicio = ahora.AddDays(-3), FechaFin = ahora.AddDays(2), Estado = "activa" };
-        var subasta4 = new Subasta { ProductoId = producto4.Id, PrecioInicial = 500.00m, PrecioActual = 650.00m, FechaInicio = ahora.AddDays(-5), FechaFin = ahora.AddDays(-1), Estado = "finalizada" };
-        var subasta5 = new Subasta { ProductoId = producto5.Id, PrecioInicial = 1200.00m, PrecioActual = 1350.00m, FechaInicio = ahora.AddDays(-1), FechaFin = ahora.AddDays(7), Estado = "activa" };
-        var subasta6 = new Subasta { ProductoId = producto6.Id, PrecioInicial = 300.00m, PrecioActual = 380.00m, FechaInicio = ahora, FechaFin = ahora.AddDays(4), Estado = "activa" };
-        var subasta7 = new Subasta { ProductoId = producto7.Id, PrecioInicial = 200.00m, PrecioActual = 250.00m, FechaInicio = ahora.AddDays(-2), FechaFin = ahora.AddDays(1), Estado = "activa" };
-        var subasta8 = new Subasta { ProductoId = producto8.Id, PrecioInicial = 500.00m, PrecioActual = 580.00m, FechaInicio = ahora.AddDays(-1), FechaFin = ahora.AddDays(6), Estado = "activa" };
+        var subasta1 = new Subasta { ProductoId = producto1.Id, VendedorId = usuario2.Id, PrecioInicial = 800.00m, PrecioActual = 950.00m, FechaInicio = ahora.AddDays(-2), FechaFin = ahora.AddDays(5), Estado = "activa" };
+        var subasta2 = new Subasta { ProductoId = producto2.Id, VendedorId = usuario2.Id, PrecioInicial = 900.00m, PrecioActual = 1050.00m, FechaInicio = ahora.AddDays(-1), FechaFin = ahora.AddDays(3), Estado = "activa" };
+        var subasta3 = new Subasta { ProductoId = producto3.Id, VendedorId = usuario5.Id, PrecioInicial = 350.00m, PrecioActual = 420.00m, FechaInicio = ahora.AddDays(-3), FechaFin = ahora.AddDays(2), Estado = "activa" };
+        var subasta4 = new Subasta { ProductoId = producto4.Id, VendedorId = usuario5.Id, PrecioInicial = 500.00m, PrecioActual = 650.00m, FechaInicio = ahora.AddDays(-5), FechaFin = ahora.AddDays(-1), Estado = "finalizada" };
+        var subasta5 = new Subasta { ProductoId = producto5.Id, VendedorId = usuario2.Id, PrecioInicial = 1200.00m, PrecioActual = 1350.00m, FechaInicio = ahora.AddDays(-1), FechaFin = ahora.AddDays(7), Estado = "activa" };
+        var subasta6 = new Subasta { ProductoId = producto6.Id, VendedorId = usuario5.Id, PrecioInicial = 300.00m, PrecioActual = 380.00m, FechaInicio = ahora, FechaFin = ahora.AddDays(4), Estado = "activa" };
+        var subasta7 = new Subasta { ProductoId = producto7.Id, VendedorId = usuario2.Id, PrecioInicial = 200.00m, PrecioActual = 250.00m, FechaInicio = ahora.AddDays(-2), FechaFin = ahora.AddDays(1), Estado = "activa" };
+        var subasta8 = new Subasta { ProductoId = producto8.Id, VendedorId = usuario5.Id, PrecioInicial = 500.00m, PrecioActual = 580.00m, FechaInicio = ahora.AddDays(-1), FechaFin = ahora.AddDays(6), Estado = "activa" };
         contexto.Subastas.AddRange(subasta1, subasta2, subasta3, subasta4, subasta5, subasta6, subasta7, subasta8);
         contexto.SaveChanges();
 

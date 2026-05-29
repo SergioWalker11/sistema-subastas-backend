@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemaSubastaBackend.DTOs;
 using SistemaSubastaBackend.Interfaces;
@@ -35,6 +36,7 @@ public class ControladorSubastas : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "vendedor,administrador")]
     public async Task<IActionResult> Crear([FromBody] SubastaCrearDTO dto)
     {
         try
@@ -49,6 +51,7 @@ public class ControladorSubastas : ControllerBase
     }
 
     [HttpPatch("{id}/estado")]
+    [Authorize(Roles = "vendedor,administrador")]
     public async Task<IActionResult> ActualizarEstado(int id, [FromBody] string estado)
     {
         try
@@ -64,5 +67,21 @@ public class ControladorSubastas : ControllerBase
         {
             return BadRequest(AyudanteRespuestaAPI.RespuestaError(ex.Message));
         }
+    }
+
+    [HttpGet("vendedor/{vendedorId}")]
+    [Authorize]
+    public async Task<IActionResult> ListarPorVendedor(int vendedorId)
+    {
+        var subastas = await _servicioSubastas.ListarPorVendedorAsync(vendedorId);
+        return Ok(AyudanteRespuestaAPI.RespuestaExito(subastas));
+    }
+
+    [HttpGet("ganadas/{usuarioId}")]
+    [Authorize]
+    public async Task<IActionResult> ListarGanadas(int usuarioId)
+    {
+        var ganadas = await _servicioSubastas.ListarGanadasPorUsuarioAsync(usuarioId);
+        return Ok(AyudanteRespuestaAPI.RespuestaExito(ganadas));
     }
 }

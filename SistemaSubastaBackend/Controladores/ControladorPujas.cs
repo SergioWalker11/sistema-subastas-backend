@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemaSubastaBackend.DTOs;
 using SistemaSubastaBackend.Interfaces;
@@ -17,6 +18,7 @@ public class ControladorPujas : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> RegistrarPuja([FromBody] PujaCrearDTO dto)
     {
         try

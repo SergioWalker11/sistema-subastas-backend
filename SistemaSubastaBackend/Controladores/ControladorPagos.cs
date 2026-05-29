@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemaSubastaBackend.DTOs;
 using SistemaSubastaBackend.Interfaces;
@@ -17,6 +18,7 @@ public class ControladorPagos : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> ProcesarPago([FromBody] PagoCrearDTO dto)
     {
         try
@@ -50,6 +52,7 @@ public class ControladorPagos : ControllerBase
     }
 
     [HttpGet("usuario/{usuarioId}")]
+    [Authorize]
     public async Task<IActionResult> ObtenerPagosUsuario(int usuarioId)
     {
         var pagos = await _servicioPagos.ObtenerPagosUsuarioAsync(usuarioId);

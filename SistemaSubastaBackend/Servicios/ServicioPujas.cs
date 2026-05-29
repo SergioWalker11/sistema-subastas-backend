@@ -53,7 +53,7 @@ public class ServicioPujas : IServicioPujas
             SubastaId = dto.SubastaId,
             UsuarioId = dto.UsuarioId,
             Monto = dto.Monto,
-            FechaCreacion = DateTime.Now
+            FechaCreacion = DateTime.UtcNow
         };
 
         puja = await _repositorioPujas.CrearAsync(puja);
@@ -62,9 +62,15 @@ public class ServicioPujas : IServicioPujas
         await _repositorioSubastas.ActualizarAsync(subasta);
 
         await _servicioNotificaciones.NotificarNuevaPujaAsync(
-            subasta.ProductoId,
+            dto.UsuarioId,
             "Nueva puja recibida",
             $"Se ha recibido una puja de {dto.Monto:C} en la subasta {subasta.Producto.Nombre}"
+        );
+
+        await _servicioNotificaciones.NotificarNuevaPujaAsync(
+            subasta.VendedorId,
+            "Puja recibida en tu subasta",
+            $"{usuario.NombreCompleto} ha pujado {dto.Monto:C} en {subasta.Producto.Nombre}"
         );
 
         return new PujaRespuestaDTO
