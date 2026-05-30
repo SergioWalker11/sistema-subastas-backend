@@ -31,22 +31,28 @@ public class ServicioPagos : IServicioPagos
     {
         var subasta = await _repositorioSubastas.ObtenerPorIdAsync(dto.SubastaId);
         if (subasta == null)
-        {
             throw new KeyNotFoundException($"No se encontro la subasta con ID {dto.SubastaId}");
-        }
 
         var usuario = await _repositorioUsuarios.ObtenerPorIdAsync(dto.UsuarioId);
         if (usuario == null)
-        {
             throw new KeyNotFoundException($"No se encontro el usuario con ID {dto.UsuarioId}");
-        }
+
+        if (usuario.Rol?.Nombre == "administrador")
+            throw new InvalidOperationException("El administrador no puede manipular pagos");
+
+        if (subasta.Estado != "pendiente_pago")
+            throw new InvalidOperationException($"No se puede pagar una subasta en estado '{subasta.Estado}'. Solo subastas pendientes de pago.");
+
+        if (subasta.GanadorId != dto.UsuarioId)
+            throw new InvalidOperationException("Solo el ganador de la subasta puede realizar el pago.");
+
+        if (subasta.FechaLimitePago.HasValue && DateTime.UtcNow > subasta.FechaLimitePago.Value)
+            throw new InvalidOperationException("El plazo de pago ha vencido.");
 
         var resultado = await _pasarelaPagos.ProcesarPagoAsync(dto.Monto, usuario.NombreCompleto, usuario.Correo);
 
         if (!resultado.Aprobado)
-        {
             throw new InvalidOperationException($"Pago rechazado: {resultado.Mensaje}");
-        }
 
         var pago = new Pago
         {
@@ -60,12 +66,13 @@ public class ServicioPagos : IServicioPagos
 
         pago = await _repositorioPagos.CrearAsync(pago);
 
-        await _servicioNotificaciones.CrearNotificacionAsync(new NotificacionCrearDTO
-        {
-            UsuarioId = usuario.Id,
-            Titulo = "Pago procesado",
-            Mensaje = $"Tu pago de {dto.Monto:C} ha sido procesado exitosamente. Transaccion: {resultado.CodigoTransaccion}"
-        });
+        subasta.Estado = "vendida";
+        await _repositorioSubastas.ActualizarAsync(subasta);
+
+        await _servicioNotificaciones.NotificarPagoRecibidoAsync(
+            usuario.Id,
+            subasta.VendedorId,
+            subasta.Producto?.Nombre ?? "Desconocido");
 
         return new PagoRespuestaDTO
         {

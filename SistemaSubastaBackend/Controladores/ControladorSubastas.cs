@@ -84,4 +84,20 @@ public class ControladorSubastas : ControllerBase
         var ganadas = await _servicioSubastas.ListarGanadasPorUsuarioAsync(usuarioId);
         return Ok(AyudanteRespuestaAPI.RespuestaExito(ganadas));
     }
+
+    [HttpGet("pendientes-pago/{usuarioId}")]
+    [Authorize]
+    public async Task<IActionResult> ListarPendientesPago(int usuarioId)
+    {
+        var pendientes = await _servicioSubastas.ListarPendientesPagoAsync(usuarioId);
+        return Ok(AyudanteRespuestaAPI.RespuestaExito(pendientes));
+    }
+
+    [HttpGet("ventas/{vendedorId}")]
+    [Authorize(Roles = "vendedor,administrador")]
+    public async Task<IActionResult> ListarVentas(int vendedorId)
+    {
+        var ventas = await _servicioSubastas.ListarVentasAsync(vendedorId);
+        return Ok(AyudanteRespuestaAPI.RespuestaExito(ventas));
+    }
 }

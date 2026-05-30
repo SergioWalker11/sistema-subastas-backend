@@ -30,23 +30,20 @@ public class ServicioPujas : IServicioPujas
     {
         var subasta = await _repositorioSubastas.ObtenerPorIdAsync(dto.SubastaId);
         if (subasta == null)
-        {
             throw new KeyNotFoundException($"No se encontro la subasta con ID {dto.SubastaId}");
-        }
 
         var usuario = await _repositorioUsuarios.ObtenerPorIdAsync(dto.UsuarioId);
         if (usuario == null)
-        {
             throw new KeyNotFoundException($"No se encontro el usuario con ID {dto.UsuarioId}");
-        }
+
+        if (usuario.Rol?.Nombre == "administrador")
+            throw new InvalidOperationException("El administrador no puede participar en subastas");
 
         var ultimaPuja = await _repositorioPujas.ObtenerUltimaPujaAsync(dto.SubastaId);
-        var errores = _validadorPujas.ValidarPuja(dto.Monto, subasta, ultimaPuja);
+        var errores = _validadorPujas.ValidarPuja(dto.Monto, subasta, ultimaPuja, dto.UsuarioId);
 
         if (errores.Count > 0)
-        {
             throw new ArgumentException(string.Join(", ", errores));
-        }
 
         var puja = new Puja
         {
@@ -61,17 +58,18 @@ public class ServicioPujas : IServicioPujas
         subasta.PrecioActual = _validadorPujas.CalcularNuevoPrecio(dto.Monto, subasta.PrecioActual);
         await _repositorioSubastas.ActualizarAsync(subasta);
 
-        await _servicioNotificaciones.NotificarNuevaPujaAsync(
-            dto.UsuarioId,
-            "Nueva puja recibida",
-            $"Se ha recibido una puja de {dto.Monto:C} en la subasta {subasta.Producto.Nombre}"
-        );
+        if (ultimaPuja != null && ultimaPuja.UsuarioId != dto.UsuarioId)
+        {
+            await _servicioNotificaciones.NotificarNuevaPujaAsync(
+                ultimaPuja.UsuarioId,
+                "Puja superada",
+                $"Alguien ha superado tu puja en '{subasta.Producto.Nombre}'");
+        }
 
         await _servicioNotificaciones.NotificarNuevaPujaAsync(
             subasta.VendedorId,
             "Puja recibida en tu subasta",
-            $"{usuario.NombreCompleto} ha pujado {dto.Monto:C} en {subasta.Producto.Nombre}"
-        );
+            $"{usuario.NombreCompleto} ha pujado {dto.Monto:C} en '{subasta.Producto.Nombre}'");
 
         return new PujaRespuestaDTO
         {

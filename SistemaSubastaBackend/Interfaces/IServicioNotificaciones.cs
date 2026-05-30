@@ -10,4 +10,6 @@ public interface IServicioNotificaciones
     Task<int> ContarNoLeidasAsync(int usuarioId);
     Task NotificarNuevaPujaAsync(int usuarioId, string titulo, string mensaje);
     Task NotificarSubastaGanadaAsync(int usuarioId, int subastaId);
+    Task NotificarPagoRecibidoAsync(int compradorId, int vendedorId, string nombreProducto);
+    Task NotificarIncumplimientoPagoAsync(int compradorId, int vendedorId, string nombreProducto);
 }

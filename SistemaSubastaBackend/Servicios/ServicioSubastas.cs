@@ -42,6 +42,24 @@ public class ServicioSubastas : IServicioSubastas
 
     public async Task<Subasta> CrearSubastaAsync(SubastaCrearDTO dto)
     {
+        var errores = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(dto.NombreProducto))
+            errores.Add("El nombre del producto es obligatorio");
+        if (string.IsNullOrWhiteSpace(dto.DescripcionProducto))
+            errores.Add("La descripcion del producto es obligatoria");
+        if (dto.CategoriaId <= 0)
+            errores.Add("La categoria es obligatoria");
+        if (dto.PrecioInicial <= 0)
+            errores.Add("El precio inicial debe ser mayor a cero");
+        if (dto.FechaInicio == default)
+            errores.Add("La fecha de inicio es obligatoria");
+        if (dto.FechaFin <= dto.FechaInicio)
+            errores.Add("La fecha de fin debe ser posterior a la fecha de inicio");
+
+        if (errores.Count > 0)
+            throw new ArgumentException(string.Join(", ", errores));
+
         var subasta = new Subasta
         {
             ProductoId = dto.ProductoId,
@@ -60,9 +78,7 @@ public class ServicioSubastas : IServicioSubastas
     {
         var subasta = await _repositorioSubastas.ObtenerPorIdAsync(id);
         if (subasta == null)
-        {
             throw new KeyNotFoundException($"No se encontro la subasta con ID {id}");
-        }
 
         subasta.Estado = estado;
         return await _repositorioSubastas.ActualizarAsync(subasta);
@@ -88,8 +104,10 @@ public class ServicioSubastas : IServicioSubastas
         var pagos = await _repositorioPagos.ObtenerPorUsuarioAsync(usuarioId);
         var pagosSubastaIds = new HashSet<int>(pagos.Select(p => p.SubastaId));
 
+        var estadosValidos = new[] { "pendiente_pago", "vendida", "incumplida" };
+
         return subastas
-            .Where(s => s.Estado == "finalizada" && s.Pujas.Any())
+            .Where(s => estadosValidos.Contains(s.Estado) && s.Pujas.Any())
             .Select(s =>
             {
                 var ultimaPuja = s.Pujas.OrderByDescending(p => p.FechaCreacion).First();
@@ -102,10 +120,48 @@ public class ServicioSubastas : IServicioSubastas
                 NombreProducto = x.Subasta.Producto?.Nombre ?? string.Empty,
                 MontoGanado = x.Monto,
                 FechaFin = x.Subasta.FechaFin,
+                FechaLimitePago = x.Subasta.FechaLimitePago,
+                Estado = x.Subasta.Estado,
                 NombreVendedor = x.Subasta.Vendedor?.NombreCompleto ?? string.Empty,
                 Pagado = pagosSubastaIds.Contains(x.Subasta.Id)
             })
             .ToList();
+    }
+
+    public async Task<List<SubastaGanadaDTO>> ListarPendientesPagoAsync(int usuarioId)
+    {
+        var ganadas = await ListarGanadasPorUsuarioAsync(usuarioId);
+        return ganadas.Where(g => !g.Pagado && g.Estado == "pendiente_pago").ToList();
+    }
+
+    public async Task<List<VentaDTO>> ListarVentasAsync(int vendedorId)
+    {
+        var subastas = await _repositorioSubastas.ObtenerTodasConPujasAsync();
+        var todasLasVentas = subastas.Where(s =>
+            s.VendedorId == vendedorId &&
+            new[] { "pendiente_pago", "vendida", "incumplida" }.Contains(s.Estado));
+
+        var ventas = new List<VentaDTO>();
+
+        foreach (var subasta in todasLasVentas)
+        {
+            var ultimaPuja = subasta.Pujas.OrderByDescending(p => p.FechaCreacion).FirstOrDefault();
+            var pago = subasta.Pagos.OrderByDescending(p => p.FechaPago).FirstOrDefault();
+
+            ventas.Add(new VentaDTO
+            {
+                SubastaId = subasta.Id,
+                NombreProducto = subasta.Producto?.Nombre ?? string.Empty,
+                NombreGanador = ultimaPuja?.Usuario?.NombreCompleto,
+                PrecioFinal = ultimaPuja?.Monto ?? subasta.PrecioActual,
+                Estado = subasta.Estado,
+                FechaFin = subasta.FechaFin,
+                FechaLimitePago = subasta.FechaLimitePago,
+                FechaPago = pago?.FechaPago
+            });
+        }
+
+        return ventas;
     }
 
     private SubastaDetalleDTO MapearADetalleDTO(Subasta subasta, int cantidadPujas)
@@ -117,10 +173,13 @@ public class ServicioSubastas : IServicioSubastas
             DescripcionProducto = subasta.Producto.Descripcion,
             VendedorId = subasta.VendedorId,
             NombreVendedor = subasta.Vendedor.NombreCompleto,
+            GanadorId = subasta.GanadorId,
+            NombreGanador = subasta.Ganador?.NombreCompleto,
             PrecioInicial = subasta.PrecioInicial,
             PrecioActual = subasta.PrecioActual,
             FechaInicio = subasta.FechaInicio,
             FechaFin = subasta.FechaFin,
+            FechaLimitePago = subasta.FechaLimitePago,
             Estado = subasta.Estado,
             CantidadPujas = cantidadPujas
         };

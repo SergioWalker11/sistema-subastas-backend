@@ -28,14 +28,34 @@ public class ServicioCierreSubastas : BackgroundService
 
                 foreach (var subasta in activas.Where(s => s.FechaFin <= ahora))
                 {
-                    subasta.Estado = "finalizada";
-                    await repositorio.ActualizarAsync(subasta);
+                    var ultimaPuja = await repoPujas.ObtenerUltimaPujaAsync(subasta.Id);
 
-                    var ganadora = await repoPujas.ObtenerUltimaPujaAsync(subasta.Id);
-                    if (ganadora != null)
+                    if (ultimaPuja != null)
                     {
-                        await notificaciones.NotificarSubastaGanadaAsync(ganadora.UsuarioId, subasta.Id);
-                        await notificaciones.NotificarSubastaGanadaAsync(subasta.VendedorId, subasta.Id);
+                        subasta.GanadorId = ultimaPuja.UsuarioId;
+                        subasta.Estado = "pendiente_pago";
+                        subasta.FechaLimitePago = ahora.AddHours(24);
+
+                        await repositorio.ActualizarAsync(subasta);
+
+                        await notificaciones.CrearNotificacionAsync(new DTOs.NotificacionCrearDTO
+                        {
+                            UsuarioId = ultimaPuja.UsuarioId,
+                            Titulo = "Subasta ganada",
+                            Mensaje = $"Has ganado la subasta. Dispones de 24 horas para realizar el pago."
+                        });
+
+                        await notificaciones.CrearNotificacionAsync(new DTOs.NotificacionCrearDTO
+                        {
+                            UsuarioId = subasta.VendedorId,
+                            Titulo = "Subasta finalizada",
+                            Mensaje = $"La subasta ha finalizado y existe un comprador pendiente de pago."
+                        });
+                    }
+                    else
+                    {
+                        subasta.Estado = "cancelada";
+                        await repositorio.ActualizarAsync(subasta);
                     }
                 }
             }

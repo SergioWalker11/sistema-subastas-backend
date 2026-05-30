@@ -6,6 +6,8 @@ public class SubastaGanadaDTO
     public string NombreProducto { get; set; } = string.Empty;
     public decimal MontoGanado { get; set; }
     public DateTime FechaFin { get; set; }
+    public DateTime? FechaLimitePago { get; set; }
+    public string Estado { get; set; } = string.Empty;
     public string NombreVendedor { get; set; } = string.Empty;
     public bool Pagado { get; set; }
 }

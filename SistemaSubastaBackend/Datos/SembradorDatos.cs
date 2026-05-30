@@ -17,12 +17,13 @@ public static class SembradorDatos
 
         var hash = BCrypt.Net.BCrypt.HashPassword("123456");
 
-        var usuario1 = new Usuario { NombreCompleto = "Carlos Mendez", Correo = "carlos@demo.com", ContrasenaHash = hash, RolId = rolComprador.Id };
-        var usuario2 = new Usuario { NombreCompleto = "Ana Lopez", Correo = "ana@demo.com", ContrasenaHash = hash, RolId = rolVendedor.Id };
-        var usuario3 = new Usuario { NombreCompleto = "Pedro Ramirez", Correo = "pedro@demo.com", ContrasenaHash = hash, RolId = rolComprador.Id };
-        var usuario4 = new Usuario { NombreCompleto = "Maria Torres", Correo = "maria@demo.com", ContrasenaHash = hash, RolId = rolComprador.Id };
-        var usuario5 = new Usuario { NombreCompleto = "Luis Garcia", Correo = "luis@demo.com", ContrasenaHash = hash, RolId = rolVendedor.Id };
-        contexto.Usuarios.AddRange(usuario1, usuario2, usuario3, usuario4, usuario5);
+        var admin = new Usuario { NombreCompleto = "Admin Sistema", Correo = "admin@sistema.com", ContrasenaHash = hash, RolId = rolAdmin.Id };
+        var usuario1 = new Usuario { NombreCompleto = "Carlos Mendez", Correo = "carlos@email.com", ContrasenaHash = hash, RolId = rolComprador.Id };
+        var usuario2 = new Usuario { NombreCompleto = "Ana Lopez", Correo = "ana@email.com", ContrasenaHash = hash, RolId = rolVendedor.Id };
+        var usuario3 = new Usuario { NombreCompleto = "Pedro Ramirez", Correo = "pedro@email.com", ContrasenaHash = hash, RolId = rolComprador.Id };
+        var usuario4 = new Usuario { NombreCompleto = "Maria Torres", Correo = "maria@email.com", ContrasenaHash = hash, RolId = rolComprador.Id };
+        var usuario5 = new Usuario { NombreCompleto = "Luis Garcia", Correo = "luis@email.com", ContrasenaHash = hash, RolId = rolVendedor.Id };
+        contexto.Usuarios.AddRange(admin, usuario1, usuario2, usuario3, usuario4, usuario5);
         contexto.SaveChanges();
 
         var catElectronica = new Categoria { Nombre = "Electrónica", Descripcion = "Dispositivos electrónicos y gadgets" };
@@ -47,7 +48,7 @@ public static class SembradorDatos
         var subasta1 = new Subasta { ProductoId = producto1.Id, VendedorId = usuario2.Id, PrecioInicial = 800.00m, PrecioActual = 950.00m, FechaInicio = ahora.AddDays(-2), FechaFin = ahora.AddDays(5), Estado = "activa" };
         var subasta2 = new Subasta { ProductoId = producto2.Id, VendedorId = usuario2.Id, PrecioInicial = 900.00m, PrecioActual = 1050.00m, FechaInicio = ahora.AddDays(-1), FechaFin = ahora.AddDays(3), Estado = "activa" };
         var subasta3 = new Subasta { ProductoId = producto3.Id, VendedorId = usuario5.Id, PrecioInicial = 350.00m, PrecioActual = 420.00m, FechaInicio = ahora.AddDays(-3), FechaFin = ahora.AddDays(2), Estado = "activa" };
-        var subasta4 = new Subasta { ProductoId = producto4.Id, VendedorId = usuario5.Id, PrecioInicial = 500.00m, PrecioActual = 650.00m, FechaInicio = ahora.AddDays(-5), FechaFin = ahora.AddDays(-1), Estado = "finalizada" };
+        var subasta4 = new Subasta { ProductoId = producto4.Id, VendedorId = usuario5.Id, PrecioInicial = 500.00m, PrecioActual = 650.00m, FechaInicio = ahora.AddDays(-5), FechaFin = ahora.AddDays(-1), Estado = "vendida", GanadorId = usuario3.Id, FechaLimitePago = ahora.AddHours(-2) };
         var subasta5 = new Subasta { ProductoId = producto5.Id, VendedorId = usuario2.Id, PrecioInicial = 1200.00m, PrecioActual = 1350.00m, FechaInicio = ahora.AddDays(-1), FechaFin = ahora.AddDays(7), Estado = "activa" };
         var subasta6 = new Subasta { ProductoId = producto6.Id, VendedorId = usuario5.Id, PrecioInicial = 300.00m, PrecioActual = 380.00m, FechaInicio = ahora, FechaFin = ahora.AddDays(4), Estado = "activa" };
         var subasta7 = new Subasta { ProductoId = producto7.Id, VendedorId = usuario2.Id, PrecioInicial = 200.00m, PrecioActual = 250.00m, FechaInicio = ahora.AddDays(-2), FechaFin = ahora.AddDays(1), Estado = "activa" };

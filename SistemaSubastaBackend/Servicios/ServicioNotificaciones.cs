@@ -61,7 +61,39 @@ public class ServicioNotificaciones : IServicioNotificaciones
         {
             UsuarioId = usuarioId,
             Titulo = "Subasta ganada",
-            Mensaje = $"Has ganado la subasta #{subastaId}. Proceder con el pago."
+            Mensaje = $"Has ganado la subasta #{subastaId}. Dispones de 24 horas para realizar el pago."
+        });
+    }
+
+    public async Task NotificarPagoRecibidoAsync(int compradorId, int vendedorId, string nombreProducto)
+    {
+        await CrearNotificacionAsync(new NotificacionCrearDTO
+        {
+            UsuarioId = compradorId,
+            Titulo = "Pago confirmado",
+            Mensaje = $"Tu pago por '{nombreProducto}' fue registrado correctamente."
+        });
+        await CrearNotificacionAsync(new NotificacionCrearDTO
+        {
+            UsuarioId = vendedorId,
+            Titulo = "Pago recibido",
+            Mensaje = $"El comprador realizo el pago por '{nombreProducto}' exitosamente."
+        });
+    }
+
+    public async Task NotificarIncumplimientoPagoAsync(int compradorId, int vendedorId, string nombreProducto)
+    {
+        await CrearNotificacionAsync(new NotificacionCrearDTO
+        {
+            UsuarioId = compradorId,
+            Titulo = "Pago vencido",
+            Mensaje = $"Perdiste la subasta de '{nombreProducto}' por incumplimiento de pago."
+        });
+        await CrearNotificacionAsync(new NotificacionCrearDTO
+        {
+            UsuarioId = vendedorId,
+            Titulo = "Comprador incumplio",
+            Mensaje = $"El comprador no realizo el pago de '{nombreProducto}' dentro del plazo establecido."
         });
     }
 

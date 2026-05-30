@@ -7,10 +7,13 @@ public class SubastaDetalleDTO
     public string DescripcionProducto { get; set; } = string.Empty;
     public int VendedorId { get; set; }
     public string NombreVendedor { get; set; } = string.Empty;
+    public int? GanadorId { get; set; }
+    public string? NombreGanador { get; set; }
     public decimal PrecioInicial { get; set; }
     public decimal PrecioActual { get; set; }
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
+    public DateTime? FechaLimitePago { get; set; }
     public string Estado { get; set; } = string.Empty;
     public int CantidadPujas { get; set; }
 }

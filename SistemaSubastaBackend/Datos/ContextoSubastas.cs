@@ -80,6 +80,7 @@ public class ContextoSubastas : DbContext
             entity.Property(e => e.PrecioActual).HasColumnType("decimal(10,2)").IsRequired();
             entity.Property(e => e.FechaInicio).IsRequired();
             entity.Property(e => e.FechaFin).IsRequired();
+            entity.Property(e => e.FechaLimitePago);
             entity.Property(e => e.Estado).IsRequired().HasMaxLength(20);
             entity.HasOne(e => e.Producto)
                 .WithMany(p => p.Subastas)
@@ -88,6 +89,10 @@ public class ContextoSubastas : DbContext
                 .WithMany(u => u.Subastas)
                 .HasForeignKey(e => e.VendedorId)
                 .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.Ganador)
+                .WithMany()
+                .HasForeignKey(e => e.GanadorId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Puja>(entity =>

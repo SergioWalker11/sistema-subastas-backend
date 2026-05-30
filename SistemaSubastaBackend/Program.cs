@@ -56,6 +56,7 @@ builder.Services.AddScoped<IServicioAdmin, ServicioAdmin>();
 
 builder.Services.AddSingleton<ServicioPasarelaPagos>();
 builder.Services.AddHostedService<ServicioCierreSubastas>();
+builder.Services.AddHostedService<ServicioPagosVencidos>();
 
 builder.Services.AddCors(opciones =>
 {
