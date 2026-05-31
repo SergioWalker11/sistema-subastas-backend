@@ -24,13 +24,4 @@ public static class AyudanteRespuestaAPI
         };
     }
 
-    public static Dictionary<string, object> RespuestaValidacion(List<string> errores)
-    {
-        return new Dictionary<string, object>
-        {
-            ["exito"] = false,
-            ["mensaje"] = "Errores de validacion",
-            ["errores"] = errores
-        };
-    }
 }

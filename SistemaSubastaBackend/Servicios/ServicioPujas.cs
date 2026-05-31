@@ -1,7 +1,6 @@
 using SistemaSubastaBackend.DTOs;
 using SistemaSubastaBackend.Interfaces;
 using SistemaSubastaBackend.Modelos;
-using SistemaSubastaBackend.Utilidades;
 
 namespace SistemaSubastaBackend.Servicios;
 
@@ -10,38 +9,35 @@ public class ServicioPujas : IServicioPujas
     private readonly IRepositorioPujas _repositorioPujas;
     private readonly IRepositorioSubastas _repositorioSubastas;
     private readonly IRepositorioUsuarios _repositorioUsuarios;
-    private readonly ValidadorPujas _validadorPujas;
+    private readonly IValidadorPujas _validadorPujas;
     private readonly IServicioNotificaciones _servicioNotificaciones;
 
     public ServicioPujas(
         IRepositorioPujas repositorioPujas,
         IRepositorioSubastas repositorioSubastas,
         IRepositorioUsuarios repositorioUsuarios,
+        IValidadorPujas validadorPujas,
         IServicioNotificaciones servicioNotificaciones)
     {
         _repositorioPujas = repositorioPujas;
         _repositorioSubastas = repositorioSubastas;
         _repositorioUsuarios = repositorioUsuarios;
+        _validadorPujas = validadorPujas;
         _servicioNotificaciones = servicioNotificaciones;
-        _validadorPujas = new ValidadorPujas();
     }
 
     public async Task<PujaRespuestaDTO> RegistrarPujaAsync(PujaCrearDTO dto)
     {
-        var subasta = await _repositorioSubastas.ObtenerPorIdAsync(dto.SubastaId);
-        if (subasta == null)
-            throw new KeyNotFoundException($"No se encontro la subasta con ID {dto.SubastaId}");
-
-        var usuario = await _repositorioUsuarios.ObtenerPorIdAsync(dto.UsuarioId);
-        if (usuario == null)
-            throw new KeyNotFoundException($"No se encontro el usuario con ID {dto.UsuarioId}");
+        var subasta = await _repositorioSubastas.ObtenerPorIdAsync(dto.SubastaId)
+            ?? throw new KeyNotFoundException($"No se encontro la subasta con ID {dto.SubastaId}");
+        var usuario = await _repositorioUsuarios.ObtenerPorIdAsync(dto.UsuarioId)
+            ?? throw new KeyNotFoundException($"No se encontro el usuario con ID {dto.UsuarioId}");
 
         if (usuario.Rol?.Nombre == "administrador")
             throw new InvalidOperationException("El administrador no puede participar en subastas");
 
         var ultimaPuja = await _repositorioPujas.ObtenerUltimaPujaAsync(dto.SubastaId);
         var errores = _validadorPujas.ValidarPuja(dto.Monto, subasta, ultimaPuja, dto.UsuarioId);
-
         if (errores.Count > 0)
             throw new ArgumentException(string.Join(", ", errores));
 
@@ -81,7 +77,7 @@ public class ServicioPujas : IServicioPujas
         };
     }
 
-    public async Task<List<PujaRespuestaDTO>> ObtenerHistorialAsync(int subastaId)
+    public async Task<List<PujaRespuestaDTO>> ObtenerHistorialAsync(int subastaId, int? usuarioId = null)
     {
         var pujas = await _repositorioPujas.ObtenerPorSubastaAsync(subastaId);
 
@@ -89,9 +85,10 @@ public class ServicioPujas : IServicioPujas
         {
             Id = p.Id,
             SubastaId = p.SubastaId,
-            NombreUsuario = p.Usuario.NombreCompleto,
+            NombreUsuario = p.UsuarioId == usuarioId ? p.Usuario.NombreCompleto : "Anonimo",
             Monto = p.Monto,
-            FechaCreacion = p.FechaCreacion
+            FechaCreacion = p.FechaCreacion,
+            EsPropia = p.UsuarioId == usuarioId
         }).ToList();
     }
 }

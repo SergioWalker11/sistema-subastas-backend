@@ -29,6 +29,6 @@ public class EstadoPendiente
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
             () => servicio.ProcesarPagoAsync(new PagoCrearDTO { SubastaId = 1, UsuarioId = 5, Monto = 100m }));
-        Assert.Contains("pendiente", ex.Message.ToLower());
+        Assert.Contains("no se puede pagar", ex.Message.ToLower());
     }
 }

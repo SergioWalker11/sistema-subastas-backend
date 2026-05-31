@@ -8,6 +8,7 @@ using SistemaSubastaBackend.Middleware;
 using SistemaSubastaBackend.Repositorios;
 using SistemaSubastaBackend.Servicios;
 using SistemaSubastaBackend.ServiciosExternos;
+using SistemaSubastaBackend.Utilidades;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,8 +54,10 @@ builder.Services.AddScoped<IServicioNotificaciones, ServicioNotificaciones>();
 builder.Services.AddScoped<IServicioAutenticacion, ServicioAutenticacion>();
 builder.Services.AddScoped<IServicioImagenes, ServicioImagenes>();
 builder.Services.AddScoped<IServicioAdmin, ServicioAdmin>();
+builder.Services.AddScoped<IServicioProductos, ServicioProductos>();
 
-builder.Services.AddSingleton<ServicioPasarelaPagos>();
+builder.Services.AddSingleton<IValidadorPujas, ValidadorPujas>();
+builder.Services.AddScoped<IServicioPasarelaPagos, ServicioPasarelaPagos>();
 builder.Services.AddHostedService<ServicioCierreSubastas>();
 builder.Services.AddHostedService<ServicioPagosVencidos>();
 

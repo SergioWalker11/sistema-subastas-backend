@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using SistemaSubastaBackend.DTOs;
 using SistemaSubastaBackend.Interfaces;
 using SistemaSubastaBackend.Modelos;
+using SistemaSubastaBackend.Utilidades;
 
 namespace SistemaSubastaBackend.Servicios;
 
@@ -21,6 +22,9 @@ public class ServicioAutenticacion : IServicioAutenticacion
 
     public async Task<AuthRespuestaDTO> LoginAsync(LoginDTO dto)
     {
+        var errores = ValidadorEntrada.ValidarLogin(dto.Correo, dto.Contrasena);
+        if (errores.Count > 0) throw new ArgumentException(string.Join(", ", errores));
+
         var usuario = await _repositorioUsuarios.ObtenerPorCorreoAsync(dto.Correo);
         if (usuario == null || !BCrypt.Net.BCrypt.Verify(dto.Contrasena, usuario.ContrasenaHash))
             throw new UnauthorizedAccessException("Credenciales invalidas");
@@ -30,6 +34,9 @@ public class ServicioAutenticacion : IServicioAutenticacion
 
     public async Task<AuthRespuestaDTO> RegistroAsync(RegistroDTO dto)
     {
+        var errores = ValidadorEntrada.ValidarRegistro(dto.NombreCompleto, dto.Correo, dto.Contrasena);
+        if (errores.Count > 0) throw new ArgumentException(string.Join(", ", errores));
+
         var existente = await _repositorioUsuarios.ObtenerPorCorreoAsync(dto.Correo);
         if (existente != null)
             throw new InvalidOperationException("El correo ya esta registrado");

@@ -5,11 +5,13 @@ namespace SistemaSubastaBackend.Servicios;
 public class ServicioPagosVencidos : BackgroundService
 {
     private readonly IServiceScopeFactory _fabricaAlcance;
+    private readonly ILogger<ServicioPagosVencidos> _logger;
     private static readonly TimeSpan Intervalo = TimeSpan.FromMinutes(1);
 
-    public ServicioPagosVencidos(IServiceScopeFactory fabricaAlcance)
+    public ServicioPagosVencidos(IServiceScopeFactory fabricaAlcance, ILogger<ServicioPagosVencidos> logger)
     {
         _fabricaAlcance = fabricaAlcance;
+        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken token)
@@ -34,23 +36,15 @@ public class ServicioPagosVencidos : BackgroundService
 
                     if (subasta.GanadorId.HasValue)
                     {
-                        await notificaciones.CrearNotificacionAsync(new DTOs.NotificacionCrearDTO
-                        {
-                            UsuarioId = subasta.GanadorId.Value,
-                            Titulo = "Pago vencido",
-                            Mensaje = $"Perdiste la subasta de '{nombreProducto}' por incumplimiento de pago."
-                        });
+                        await notificaciones.NotificarIncumplimientoPagoAsync(
+                            subasta.GanadorId.Value, subasta.VendedorId, nombreProducto);
                     }
-
-                    await notificaciones.CrearNotificacionAsync(new DTOs.NotificacionCrearDTO
-                    {
-                        UsuarioId = subasta.VendedorId,
-                        Titulo = "Comprador incumplio",
-                        Mensaje = $"El comprador no realizo el pago de '{nombreProducto}' dentro del plazo establecido."
-                    });
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error en ciclo de verificacion de pagos vencidos");
+            }
 
             await Task.Delay(Intervalo, token);
         }

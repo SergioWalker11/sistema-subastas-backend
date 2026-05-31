@@ -3,7 +3,6 @@ using SistemaSubastaBackend.DTOs;
 using SistemaSubastaBackend.Interfaces;
 using SistemaSubastaBackend.Modelos;
 using SistemaSubastaBackend.Servicios;
-using SistemaSubastaBackend.ServiciosExternos;
 
 namespace SistemaSubastaBackend.Tests.Pagos;
 
@@ -27,11 +26,17 @@ public class FlujoExitoso
             { Id = 5, NombreCompleto = "C", Correo = "c@t.com", Rol = new Rol { Nombre = "comprador" } });
         var mockPagos = new Mock<IRepositorioPagos>();
         mockPagos.Setup(r => r.CrearAsync(It.IsAny<Pago>())).ReturnsAsync((Pago p) => p);
+        var mockPasarela = new Mock<IServicioPasarelaPagos>();
+        mockPasarela.Setup(p => p.ProcesarPagoAsync(500m, "C", "c@t.com"))
+            .ReturnsAsync(new SistemaSubastaBackend.ServiciosExternos.ResultadoPasarela
+            {
+                CodigoTransaccion = "SUBASTA-TEST-1234", Aprobado = true, Mensaje = "Aprobado", Monto = 500m
+            });
         var mockNotif = new Mock<IServicioNotificaciones>();
         mockNotif.Setup(n => n.NotificarPagoRecibidoAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>()))
             .Returns(Task.CompletedTask);
         var servicio = new ServicioPagos(mockPagos.Object, mockSubastas.Object,
-            mockUsuarios.Object, new ServicioPasarelaPagos(), mockNotif.Object);
+            mockUsuarios.Object, mockPasarela.Object, mockNotif.Object);
 
         var r = await servicio.ProcesarPagoAsync(new PagoCrearDTO { SubastaId = 1, UsuarioId = 5, Monto = 500m });
 

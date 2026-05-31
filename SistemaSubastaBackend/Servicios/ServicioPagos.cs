@@ -1,7 +1,7 @@
 using SistemaSubastaBackend.DTOs;
 using SistemaSubastaBackend.Interfaces;
 using SistemaSubastaBackend.Modelos;
-using SistemaSubastaBackend.ServiciosExternos;
+using SistemaSubastaBackend.Utilidades;
 
 namespace SistemaSubastaBackend.Servicios;
 
@@ -10,14 +10,14 @@ public class ServicioPagos : IServicioPagos
     private readonly IRepositorioPagos _repositorioPagos;
     private readonly IRepositorioSubastas _repositorioSubastas;
     private readonly IRepositorioUsuarios _repositorioUsuarios;
-    private readonly ServicioPasarelaPagos _pasarelaPagos;
+    private readonly IServicioPasarelaPagos _pasarelaPagos;
     private readonly IServicioNotificaciones _servicioNotificaciones;
 
     public ServicioPagos(
         IRepositorioPagos repositorioPagos,
         IRepositorioSubastas repositorioSubastas,
         IRepositorioUsuarios repositorioUsuarios,
-        ServicioPasarelaPagos pasarelaPagos,
+        IServicioPasarelaPagos pasarelaPagos,
         IServicioNotificaciones servicioNotificaciones)
     {
         _repositorioPagos = repositorioPagos;
@@ -29,28 +29,15 @@ public class ServicioPagos : IServicioPagos
 
     public async Task<PagoRespuestaDTO> ProcesarPagoAsync(PagoCrearDTO dto)
     {
-        var subasta = await _repositorioSubastas.ObtenerPorIdAsync(dto.SubastaId);
-        if (subasta == null)
-            throw new KeyNotFoundException($"No se encontro la subasta con ID {dto.SubastaId}");
+        var subasta = await _repositorioSubastas.ObtenerPorIdAsync(dto.SubastaId)
+            ?? throw new KeyNotFoundException($"No se encontro la subasta con ID {dto.SubastaId}");
+        var usuario = await _repositorioUsuarios.ObtenerPorIdAsync(dto.UsuarioId)
+            ?? throw new KeyNotFoundException($"No se encontro el usuario con ID {dto.UsuarioId}");
 
-        var usuario = await _repositorioUsuarios.ObtenerPorIdAsync(dto.UsuarioId);
-        if (usuario == null)
-            throw new KeyNotFoundException($"No se encontro el usuario con ID {dto.UsuarioId}");
-
-        if (usuario.Rol?.Nombre == "administrador")
-            throw new InvalidOperationException("El administrador no puede manipular pagos");
-
-        if (subasta.Estado != "pendiente_pago")
-            throw new InvalidOperationException($"No se puede pagar una subasta en estado '{subasta.Estado}'. Solo subastas pendientes de pago.");
-
-        if (subasta.GanadorId != dto.UsuarioId)
-            throw new InvalidOperationException("Solo el ganador de la subasta puede realizar el pago.");
-
-        if (subasta.FechaLimitePago.HasValue && DateTime.UtcNow > subasta.FechaLimitePago.Value)
-            throw new InvalidOperationException("El plazo de pago ha vencido.");
+        ValidarPago(subasta, usuario, dto.UsuarioId);
+        ValidarMonto(dto.Monto);
 
         var resultado = await _pasarelaPagos.ProcesarPagoAsync(dto.Monto, usuario.NombreCompleto, usuario.Correo);
-
         if (!resultado.Aprobado)
             throw new InvalidOperationException($"Pago rechazado: {resultado.Mensaje}");
 
@@ -98,6 +85,24 @@ public class ServicioPagos : IServicioPagos
     {
         var pagos = await _repositorioPagos.ObtenerPorUsuarioAsync(usuarioId);
         return pagos.Select(MapearARespuestaDTO).ToList();
+    }
+
+    private static void ValidarPago(Subasta subasta, Usuario usuario, int usuarioId)
+    {
+        if (usuario.Rol?.Nombre == "administrador")
+            throw new InvalidOperationException("El administrador no puede manipular pagos");
+        if (subasta.Estado != "pendiente_pago")
+            throw new InvalidOperationException($"No se puede pagar una subasta en estado '{subasta.Estado}'");
+        if (subasta.GanadorId != usuarioId)
+            throw new InvalidOperationException("Solo el ganador de la subasta puede realizar el pago.");
+        if (subasta.FechaLimitePago.HasValue && DateTime.UtcNow > subasta.FechaLimitePago.Value)
+            throw new InvalidOperationException("El plazo de pago ha vencido.");
+    }
+
+    private static void ValidarMonto(decimal monto)
+    {
+        var errores = ValidadorEntrada.ValidarMonto(monto);
+        if (errores.Count > 0) throw new ArgumentException(string.Join(", ", errores));
     }
 
     private PagoRespuestaDTO MapearARespuestaDTO(Pago pago)

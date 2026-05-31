@@ -42,23 +42,7 @@ public class ServicioSubastas : IServicioSubastas
 
     public async Task<Subasta> CrearSubastaAsync(SubastaCrearDTO dto)
     {
-        var errores = new List<string>();
-
-        if (string.IsNullOrWhiteSpace(dto.NombreProducto))
-            errores.Add("El nombre del producto es obligatorio");
-        if (string.IsNullOrWhiteSpace(dto.DescripcionProducto))
-            errores.Add("La descripcion del producto es obligatoria");
-        if (dto.CategoriaId <= 0)
-            errores.Add("La categoria es obligatoria");
-        if (dto.PrecioInicial <= 0)
-            errores.Add("El precio inicial debe ser mayor a cero");
-        if (dto.FechaInicio == default)
-            errores.Add("La fecha de inicio es obligatoria");
-        if (dto.FechaFin <= dto.FechaInicio)
-            errores.Add("La fecha de fin debe ser posterior a la fecha de inicio");
-
-        if (errores.Count > 0)
-            throw new ArgumentException(string.Join(", ", errores));
+        ValidarCreacion(dto);
 
         var subasta = new Subasta
         {
@@ -72,6 +56,22 @@ public class ServicioSubastas : IServicioSubastas
         };
 
         return await _repositorioSubastas.CrearAsync(subasta);
+    }
+
+    private static void ValidarCreacion(SubastaCrearDTO dto)
+    {
+        var reglas = new (bool falla, string mensaje)[]
+        {
+            (string.IsNullOrWhiteSpace(dto.NombreProducto), "El nombre del producto es obligatorio"),
+            (string.IsNullOrWhiteSpace(dto.DescripcionProducto), "La descripcion del producto es obligatoria"),
+            (dto.CategoriaId <= 0, "La categoria es obligatoria"),
+            (dto.PrecioInicial <= 0, "El precio inicial debe ser mayor a cero"),
+            (dto.FechaInicio == default, "La fecha de inicio es obligatoria"),
+            (dto.FechaFin <= dto.FechaInicio, "La fecha de fin debe ser posterior a la fecha de inicio"),
+        };
+
+        var errores = reglas.Where(r => r.falla).Select(r => r.mensaje).ToList();
+        if (errores.Count > 0) throw new ArgumentException(string.Join(", ", errores));
     }
 
     public async Task<Subasta> ActualizarEstadoAsync(int id, string estado)
@@ -181,7 +181,9 @@ public class ServicioSubastas : IServicioSubastas
             FechaFin = subasta.FechaFin,
             FechaLimitePago = subasta.FechaLimitePago,
             Estado = subasta.Estado,
-            CantidadPujas = cantidadPujas
+            CantidadPujas = cantidadPujas,
+            CategoriaId = subasta.Producto.CategoriaId ?? 0,
+            CategoriaNombre = subasta.Producto.Categoria?.Nombre ?? string.Empty
         };
     }
 }

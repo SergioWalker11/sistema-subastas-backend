@@ -7,4 +7,5 @@ public class PujaRespuestaDTO
     public string NombreUsuario { get; set; } = string.Empty;
     public decimal Monto { get; set; }
     public DateTime FechaCreacion { get; set; }
+    public bool EsPropia { get; set; }
 }

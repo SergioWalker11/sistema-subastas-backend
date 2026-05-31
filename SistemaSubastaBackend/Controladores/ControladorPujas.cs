@@ -41,9 +41,9 @@ public class ControladorPujas : ControllerBase
     }
 
     [HttpGet("subasta/{subastaId}")]
-    public async Task<IActionResult> ObtenerHistorial(int subastaId)
+    public async Task<IActionResult> ObtenerHistorial(int subastaId, [FromQuery] int? usuarioId = null)
     {
-        var historial = await _servicioPujas.ObtenerHistorialAsync(subastaId);
+        var historial = await _servicioPujas.ObtenerHistorialAsync(subastaId, usuarioId);
         return Ok(AyudanteRespuestaAPI.RespuestaExito(historial));
     }
 }

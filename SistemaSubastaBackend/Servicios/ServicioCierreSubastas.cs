@@ -5,11 +5,13 @@ namespace SistemaSubastaBackend.Servicios;
 public class ServicioCierreSubastas : BackgroundService
 {
     private readonly IServiceScopeFactory _fabricaAlcance;
+    private readonly ILogger<ServicioCierreSubastas> _logger;
     private static readonly TimeSpan Intervalo = TimeSpan.FromMinutes(1);
 
-    public ServicioCierreSubastas(IServiceScopeFactory fabricaAlcance)
+    public ServicioCierreSubastas(IServiceScopeFactory fabricaAlcance, ILogger<ServicioCierreSubastas> logger)
     {
         _fabricaAlcance = fabricaAlcance;
+        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken token)
@@ -37,20 +39,7 @@ public class ServicioCierreSubastas : BackgroundService
                         subasta.FechaLimitePago = ahora.AddHours(24);
 
                         await repositorio.ActualizarAsync(subasta);
-
-                        await notificaciones.CrearNotificacionAsync(new DTOs.NotificacionCrearDTO
-                        {
-                            UsuarioId = ultimaPuja.UsuarioId,
-                            Titulo = "Subasta ganada",
-                            Mensaje = $"Has ganado la subasta. Dispones de 24 horas para realizar el pago."
-                        });
-
-                        await notificaciones.CrearNotificacionAsync(new DTOs.NotificacionCrearDTO
-                        {
-                            UsuarioId = subasta.VendedorId,
-                            Titulo = "Subasta finalizada",
-                            Mensaje = $"La subasta ha finalizado y existe un comprador pendiente de pago."
-                        });
+                        await notificaciones.NotificarSubastaGanadaAsync(ultimaPuja.UsuarioId, subasta.Id);
                     }
                     else
                     {
@@ -59,7 +48,10 @@ public class ServicioCierreSubastas : BackgroundService
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error en ciclo de cierre de subastas");
+            }
 
             await Task.Delay(Intervalo, token);
         }

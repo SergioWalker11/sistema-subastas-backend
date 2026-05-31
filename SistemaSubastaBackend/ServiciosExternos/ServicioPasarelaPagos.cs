@@ -1,13 +1,14 @@
+using SistemaSubastaBackend.Interfaces;
+
 namespace SistemaSubastaBackend.ServiciosExternos;
 
-public class ServicioPasarelaPagos
+public class ServicioPasarelaPagos : IServicioPasarelaPagos
 {
     public async Task<ResultadoPasarela> ProcesarPagoAsync(decimal monto, string nombreUsuario, string correo)
     {
         await Task.Delay(500);
 
         var codigoTransaccion = GenerarCodigoTransaccion();
-
         var esAprobado = monto > 0 && monto < 1000000;
 
         return new ResultadoPasarela
@@ -32,12 +33,11 @@ public class ServicioPasarelaPagos
         };
     }
 
-    private string GenerarCodigoTransaccion()
+    private static string GenerarCodigoTransaccion()
     {
-        var prefijo = "SUBASTA";
-        var marcaTiempo = DateTime.Now.ToString("yyyyMMddHHmmss");
-        var aleatorio = new Random().Next(1000, 9999);
-        return $"{prefijo}-{marcaTiempo}-{aleatorio}";
+        var marcaTiempo = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+        var aleatorio = Random.Shared.Next(1000, 9999);
+        return $"SUBASTA-{marcaTiempo}-{aleatorio}";
     }
 }
 

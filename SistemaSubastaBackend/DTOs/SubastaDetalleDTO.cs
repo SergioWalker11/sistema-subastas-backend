@@ -16,4 +16,6 @@ public class SubastaDetalleDTO
     public DateTime? FechaLimitePago { get; set; }
     public string Estado { get; set; } = string.Empty;
     public int CantidadPujas { get; set; }
+    public int CategoriaId { get; set; }
+    public string CategoriaNombre { get; set; } = string.Empty;
 }
