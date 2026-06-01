@@ -40,6 +40,29 @@ public class ControladorPagos : ControllerBase
         }
     }
 
+    [HttpPost("tarjeta")]
+    [Authorize]
+    public async Task<IActionResult> ProcesarPagoTarjeta([FromBody] PagoTarjetaDTO dto)
+    {
+        try
+        {
+            var pago = await _servicioPagos.ProcesarPagoConTarjetaAsync(dto);
+            return Ok(AyudanteRespuestaAPI.RespuestaExito(pago, "Pago con tarjeta procesado exitosamente"));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(AyudanteRespuestaAPI.RespuestaError(ex.Message, 404));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(AyudanteRespuestaAPI.RespuestaError(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(AyudanteRespuestaAPI.RespuestaError(ex.Message));
+        }
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> ObtenerPago(int id)
     {

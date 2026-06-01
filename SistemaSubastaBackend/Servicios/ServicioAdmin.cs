@@ -1,5 +1,6 @@
 using SistemaSubastaBackend.DTOs;
 using SistemaSubastaBackend.Interfaces;
+using SistemaSubastaBackend.Modelos;
 
 namespace SistemaSubastaBackend.Servicios;
 
@@ -25,7 +26,8 @@ public class ServicioAdmin : IServicioAdmin
             NombreCompleto = u.NombreCompleto,
             Correo = u.Correo,
             RolId = u.RolId,
-            RolNombre = u.Rol?.Nombre ?? string.Empty
+            RolNombre = u.Rol?.Nombre ?? string.Empty,
+            EstaSuspendido = u.EstaSuspendido
         }).ToList();
     }
 
@@ -48,5 +50,15 @@ public class ServicioAdmin : IServicioAdmin
 
         subasta.Estado = "cancelada";
         await _repoSubastas.ActualizarAsync(subasta);
+    }
+
+    public async Task<Usuario?> ObtenerUsuarioAsync(int usuarioId)
+    {
+        return await _repoUsuarios.ObtenerPorIdAsync(usuarioId);
+    }
+
+    public async Task ActualizarUsuarioAsync(Usuario usuario)
+    {
+        await _repoUsuarios.ActualizarAsync(usuario);
     }
 }

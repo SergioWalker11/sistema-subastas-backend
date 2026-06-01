@@ -27,6 +27,59 @@ public class ServicioPagos : IServicioPagos
         _servicioNotificaciones = servicioNotificaciones;
     }
 
+    public async Task<PagoRespuestaDTO> ProcesarPagoConTarjetaAsync(PagoTarjetaDTO dto)
+    {
+        var subasta = await _repositorioSubastas.ObtenerPorIdAsync(dto.SubastaId)
+            ?? throw new KeyNotFoundException($"No se encontro la subasta con ID {dto.SubastaId}");
+        var usuario = await _repositorioUsuarios.ObtenerPorIdAsync(dto.UsuarioId)
+            ?? throw new KeyNotFoundException($"No se encontro el usuario con ID {dto.UsuarioId}");
+
+        if (usuario.EstaSuspendido)
+            throw new InvalidOperationException("Tu cuenta esta suspendida. No puedes realizar pagos.");
+
+        ValidarPago(subasta, usuario, dto.UsuarioId);
+        ValidarMonto(dto.Monto);
+
+        var resultado = await _pasarelaPagos.ProcesarPagoConTarjetaAsync(dto);
+        if (!resultado.Aprobado)
+            throw new InvalidOperationException(resultado.Mensaje);
+
+        var pago = new Pago
+        {
+            SubastaId = dto.SubastaId,
+            UsuarioId = dto.UsuarioId,
+            Monto = dto.Monto,
+            CodigoTransaccion = resultado.CodigoTransaccion,
+            EstadoPago = "custodia",
+            FechaPago = DateTime.UtcNow
+        };
+
+        pago = await _repositorioPagos.CrearAsync(pago);
+
+        subasta.Estado = "pagada";
+        await _repositorioSubastas.ActualizarAsync(subasta);
+
+        await _servicioNotificaciones.NotificarPagoRecibidoAsync(
+            usuario.Id,
+            subasta.VendedorId,
+            subasta.Producto?.Nombre ?? "Desconocido");
+
+        ProgramarLiberacionFondos(dto.SubastaId, subasta.VendedorId, subasta.Vendedor?.Correo ?? "");
+
+        return new PagoRespuestaDTO
+        {
+            Id = pago.Id,
+            SubastaId = pago.SubastaId,
+            NombreUsuario = usuario.NombreCompleto,
+            Monto = pago.Monto,
+            CodigoTransaccion = pago.CodigoTransaccion,
+            EstadoPago = pago.EstadoPago,
+            FechaPago = pago.FechaPago,
+            Franquicia = resultado.Franquicia,
+            UltimosDigitos = resultado.UltimosDigitos
+        };
+    }
+
     public async Task<PagoRespuestaDTO> ProcesarPagoAsync(PagoCrearDTO dto)
     {
         var subasta = await _repositorioSubastas.ObtenerPorIdAsync(dto.SubastaId)
@@ -103,6 +156,44 @@ public class ServicioPagos : IServicioPagos
     {
         var errores = ValidadorEntrada.ValidarMonto(monto);
         if (errores.Count > 0) throw new ArgumentException(string.Join(", ", errores));
+    }
+
+    private static void ProgramarLiberacionFondos(int subastaId, int vendedorId, string correoVendedor)
+    {
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(30_000);
+            var alcance = AppServiciosProveedor.Instancia?.CreateScope();
+            if (alcance == null) return;
+
+            var repoSubastas = alcance.ServiceProvider.GetRequiredService<IRepositorioSubastas>();
+            var repoPagos = alcance.ServiceProvider.GetRequiredService<IRepositorioPagos>();
+            var repoBanco = alcance.ServiceProvider.GetRequiredService<IRepositorioDatosBancarios>();
+            var pasarela = alcance.ServiceProvider.GetRequiredService<IServicioPasarelaPagos>();
+            var notif = alcance.ServiceProvider.GetRequiredService<IServicioNotificaciones>();
+
+            var pago = (await repoPagos.ObtenerPorSubastaAsync(subastaId)).FirstOrDefault(p => p.EstadoPago == "custodia");
+            if (pago == null) return;
+
+            var datosBancarios = await repoBanco.ObtenerPorUsuarioAsync(vendedorId);
+
+            if (datosBancarios != null)
+            {
+                await pasarela.ProcesarDepositoAsync(pago.Monto, datosBancarios.Banco, datosBancarios.NumeroCuenta, datosBancarios.Titular);
+            }
+
+            pago.EstadoPago = "depositado";
+            await repoPagos.ActualizarAsync(pago);
+
+            var subasta = await repoSubastas.ObtenerPorIdAsync(subastaId);
+            if (subasta != null && subasta.Estado == "pagada")
+            {
+                subasta.Estado = "vendida";
+                await repoSubastas.ActualizarAsync(subasta);
+            }
+
+            await notif.NotificarDepositoRealizadoAsync(vendedorId, datosBancarios?.Banco ?? "cuenta registrada");
+        });
     }
 
     private PagoRespuestaDTO MapearARespuestaDTO(Pago pago)

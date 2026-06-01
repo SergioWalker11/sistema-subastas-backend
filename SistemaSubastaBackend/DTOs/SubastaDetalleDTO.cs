@@ -5,6 +5,7 @@ public class SubastaDetalleDTO
     public int Id { get; set; }
     public string NombreProducto { get; set; } = string.Empty;
     public string DescripcionProducto { get; set; } = string.Empty;
+    public int ProductoId { get; set; }
     public int VendedorId { get; set; }
     public string NombreVendedor { get; set; } = string.Empty;
     public int? GanadorId { get; set; }
@@ -18,4 +19,5 @@ public class SubastaDetalleDTO
     public int CantidadPujas { get; set; }
     public int CategoriaId { get; set; }
     public string CategoriaNombre { get; set; } = string.Empty;
+    public string? ImagenPrincipal { get; set; }
 }

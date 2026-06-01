@@ -6,10 +6,12 @@ namespace SistemaSubastaBackend.Servicios;
 public class ServicioImagenes : IServicioImagenes
 {
     private readonly string _rutaBase;
+    private readonly IRepositorioImagenes _repositorio;
 
-    public ServicioImagenes(IConfiguration configuracion)
+    public ServicioImagenes(IConfiguration configuracion, IRepositorioImagenes repositorio)
     {
         _rutaBase = Path.Combine(Directory.GetCurrentDirectory(), "ImagenesProductos");
+        _repositorio = repositorio;
     }
 
     public async Task<ImagenProducto> SubirImagenAsync(int productoId, IFormFile archivo, bool esPrincipal)
@@ -31,22 +33,24 @@ public class ServicioImagenes : IServicioImagenes
         using var stream = new FileStream(rutaCompleta, FileMode.Create);
         await archivo.CopyToAsync(stream);
 
-        return new ImagenProducto
+        var imagen = new ImagenProducto
         {
             ProductoId = productoId,
             RutaArchivo = nombreArchivo,
             EsPrincipal = esPrincipal,
             Orden = 0
         };
+
+        return await _repositorio.CrearAsync(imagen);
     }
 
-    public Task<List<ImagenProducto>> ObtenerPorProductoAsync(int productoId)
+    public async Task<List<ImagenProducto>> ObtenerPorProductoAsync(int productoId)
     {
-        return Task.FromResult(new List<ImagenProducto>());
+        return await _repositorio.ObtenerPorProductoAsync(productoId);
     }
 
-    public Task EliminarAsync(int id)
+    public async Task EliminarAsync(int id)
     {
-        return Task.CompletedTask;
+        await _repositorio.EliminarAsync(id);
     }
 }

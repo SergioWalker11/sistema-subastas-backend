@@ -30,4 +30,11 @@ public class ControladorImagenes : ControllerBase
             return BadRequest(AyudanteRespuestaAPI.RespuestaError(ex.Message));
         }
     }
+
+    [HttpGet("producto/{productoId}")]
+    public async Task<IActionResult> ObtenerPorProducto(int productoId)
+    {
+        var imagenes = await _servicioImagenes.ObtenerPorProductoAsync(productoId);
+        return Ok(AyudanteRespuestaAPI.RespuestaExito(imagenes));
+    }
 }

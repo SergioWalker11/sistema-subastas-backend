@@ -29,6 +29,9 @@ public class ServicioAutenticacion : IServicioAutenticacion
         if (usuario == null || !BCrypt.Net.BCrypt.Verify(dto.Contrasena, usuario.ContrasenaHash))
             throw new UnauthorizedAccessException("Credenciales invalidas");
 
+        if (usuario.EstaSuspendido)
+            throw new UnauthorizedAccessException("Tu cuenta ha sido suspendida. Contacta al administrador.");
+
         return GenerarRespuesta(usuario);
     }
 

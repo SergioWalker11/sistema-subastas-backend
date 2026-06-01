@@ -38,6 +38,13 @@ public class RepositorioPagos : IRepositorioPagos
             .ToListAsync();
     }
 
+    public async Task<List<Pago>> ObtenerPorSubastaAsync(int subastaId)
+    {
+        return await _contexto.Pagos
+            .Where(p => p.SubastaId == subastaId)
+            .ToListAsync();
+    }
+
     public async Task<Pago> ActualizarAsync(Pago pago)
     {
         _contexto.Pagos.Update(pago);

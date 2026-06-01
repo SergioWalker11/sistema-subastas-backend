@@ -97,6 +97,16 @@ public class ServicioNotificaciones : IServicioNotificaciones
         });
     }
 
+    public async Task NotificarDepositoRealizadoAsync(int vendedorId, string banco)
+    {
+        await CrearNotificacionAsync(new NotificacionCrearDTO
+        {
+            UsuarioId = vendedorId,
+            Titulo = "Deposito realizado",
+            Mensaje = $"El dinero fue transferido a tu cuenta bancaria en {banco}. El dinero ya esta disponible."
+        });
+    }
+
     private NotificacionRespuestaDTO MapearARespuestaDTO(Notificacion notificacion)
     {
         return new NotificacionRespuestaDTO

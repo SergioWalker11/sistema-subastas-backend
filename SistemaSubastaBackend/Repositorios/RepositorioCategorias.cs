@@ -23,4 +23,27 @@ public class RepositorioCategorias : IRepositorioCategorias
     {
         return await _contexto.Categorias.FindAsync(id);
     }
+
+    public async Task<Categoria> CrearAsync(Categoria categoria)
+    {
+        _contexto.Categorias.Add(categoria);
+        await _contexto.SaveChangesAsync();
+        return categoria;
+    }
+
+    public async Task ActualizarAsync(Categoria categoria)
+    {
+        _contexto.Categorias.Update(categoria);
+        await _contexto.SaveChangesAsync();
+    }
+
+    public async Task EliminarAsync(int id)
+    {
+        var categoria = await _contexto.Categorias.FindAsync(id);
+        if (categoria != null)
+        {
+            _contexto.Categorias.Remove(categoria);
+            await _contexto.SaveChangesAsync();
+        }
+    }
 }

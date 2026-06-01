@@ -12,4 +12,5 @@ public interface IServicioNotificaciones
     Task NotificarSubastaGanadaAsync(int usuarioId, int subastaId);
     Task NotificarPagoRecibidoAsync(int compradorId, int vendedorId, string nombreProducto);
     Task NotificarIncumplimientoPagoAsync(int compradorId, int vendedorId, string nombreProducto);
+    Task NotificarDepositoRealizadoAsync(int vendedorId, string banco);
 }

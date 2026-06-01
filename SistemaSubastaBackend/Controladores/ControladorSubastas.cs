@@ -69,6 +69,52 @@ public class ControladorSubastas : ControllerBase
         }
     }
 
+    [HttpPatch("{id}")]
+    [Authorize(Roles = "vendedor,administrador")]
+    public async Task<IActionResult> Editar(int id, [FromBody] SubastaEditarDTO dto)
+    {
+        try
+        {
+            var subasta = await _servicioSubastas.EditarSubastaAsync(id, dto);
+            return Ok(AyudanteRespuestaAPI.RespuestaExito(subasta, "Subasta editada exitosamente"));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(AyudanteRespuestaAPI.RespuestaError(ex.Message, 404));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(AyudanteRespuestaAPI.RespuestaError(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(AyudanteRespuestaAPI.RespuestaError(ex.Message));
+        }
+    }
+
+    [HttpPatch("{id}/cancelar")]
+    [Authorize(Roles = "vendedor,administrador")]
+    public async Task<IActionResult> Cancelar(int id, [FromQuery] int vendedorId)
+    {
+        try
+        {
+            var subasta = await _servicioSubastas.CancelarSubastaAsync(id, vendedorId);
+            return Ok(AyudanteRespuestaAPI.RespuestaExito(subasta, "Subasta cancelada exitosamente"));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(AyudanteRespuestaAPI.RespuestaError(ex.Message, 404));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(AyudanteRespuestaAPI.RespuestaError(ex.Message));
+        }
+    }
+
     [HttpGet("vendedor/{vendedorId}")]
     [Authorize]
     public async Task<IActionResult> ListarPorVendedor(int vendedorId)

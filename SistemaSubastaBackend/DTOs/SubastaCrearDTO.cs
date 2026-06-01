@@ -11,3 +11,10 @@ public class SubastaCrearDTO
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
 }
+
+public class SubastaEditarDTO
+{
+    public decimal PrecioInicial { get; set; }
+    public DateTime FechaInicio { get; set; }
+    public DateTime FechaFin { get; set; }
+}

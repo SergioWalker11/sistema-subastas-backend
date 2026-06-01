@@ -62,9 +62,6 @@ public class ServicioSubastas : IServicioSubastas
     {
         var reglas = new (bool falla, string mensaje)[]
         {
-            (string.IsNullOrWhiteSpace(dto.NombreProducto), "El nombre del producto es obligatorio"),
-            (string.IsNullOrWhiteSpace(dto.DescripcionProducto), "La descripcion del producto es obligatoria"),
-            (dto.CategoriaId <= 0, "La categoria es obligatoria"),
             (dto.PrecioInicial <= 0, "El precio inicial debe ser mayor a cero"),
             (dto.FechaInicio == default, "La fecha de inicio es obligatoria"),
             (dto.FechaFin <= dto.FechaInicio, "La fecha de fin debe ser posterior a la fecha de inicio"),
@@ -81,6 +78,40 @@ public class ServicioSubastas : IServicioSubastas
             throw new KeyNotFoundException($"No se encontro la subasta con ID {id}");
 
         subasta.Estado = estado;
+        return await _repositorioSubastas.ActualizarAsync(subasta);
+    }
+
+    public async Task<Subasta> EditarSubastaAsync(int id, SubastaEditarDTO dto)
+    {
+        var subasta = await _repositorioSubastas.ObtenerPorIdAsync(id)
+            ?? throw new KeyNotFoundException($"No se encontro la subasta con ID {id}");
+
+        if (subasta.FechaInicio <= DateTime.UtcNow)
+            throw new InvalidOperationException("No se puede editar una subasta que ya inicio");
+
+        if (dto.PrecioInicial <= 0)
+            throw new ArgumentException("El precio inicial debe ser mayor a cero");
+
+        if (dto.FechaFin <= dto.FechaInicio)
+            throw new ArgumentException("La fecha de fin debe ser posterior a la fecha de inicio");
+
+        subasta.PrecioInicial = dto.PrecioInicial;
+        subasta.PrecioActual = dto.PrecioInicial;
+        subasta.FechaInicio = dto.FechaInicio;
+        subasta.FechaFin = dto.FechaFin;
+
+        return await _repositorioSubastas.ActualizarAsync(subasta);
+    }
+
+    public async Task<Subasta> CancelarSubastaAsync(int id, int vendedorId)
+    {
+        var subasta = await _repositorioSubastas.ObtenerPorIdAsync(id)
+            ?? throw new KeyNotFoundException($"No se encontro la subasta con ID {id}");
+
+        if (subasta.VendedorId != vendedorId)
+            throw new UnauthorizedAccessException("Solo el vendedor puede cancelar su propia subasta");
+
+        subasta.Estado = "cancelada";
         return await _repositorioSubastas.ActualizarAsync(subasta);
     }
 
@@ -166,9 +197,13 @@ public class ServicioSubastas : IServicioSubastas
 
     private SubastaDetalleDTO MapearADetalleDTO(Subasta subasta, int cantidadPujas)
     {
+        var imagenPrincipal = subasta.Producto?.Imagenes?.FirstOrDefault(i => i.EsPrincipal)?.RutaArchivo
+                           ?? subasta.Producto?.Imagenes?.FirstOrDefault()?.RutaArchivo;
+
         return new SubastaDetalleDTO
         {
             Id = subasta.Id,
+            ProductoId = subasta.ProductoId,
             NombreProducto = subasta.Producto.Nombre,
             DescripcionProducto = subasta.Producto.Descripcion,
             VendedorId = subasta.VendedorId,
@@ -183,7 +218,8 @@ public class ServicioSubastas : IServicioSubastas
             Estado = subasta.Estado,
             CantidadPujas = cantidadPujas,
             CategoriaId = subasta.Producto.CategoriaId ?? 0,
-            CategoriaNombre = subasta.Producto.Categoria?.Nombre ?? string.Empty
+            CategoriaNombre = subasta.Producto.Categoria?.Nombre ?? string.Empty,
+            ImagenPrincipal = imagenPrincipal
         };
     }
 }

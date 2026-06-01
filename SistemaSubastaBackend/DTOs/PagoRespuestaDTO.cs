@@ -9,4 +9,6 @@ public class PagoRespuestaDTO
     public string CodigoTransaccion { get; set; } = string.Empty;
     public string EstadoPago { get; set; } = string.Empty;
     public DateTime FechaPago { get; set; }
+    public string? Franquicia { get; set; }
+    public string? UltimosDigitos { get; set; }
 }

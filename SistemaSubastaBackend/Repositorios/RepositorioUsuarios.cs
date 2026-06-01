@@ -39,7 +39,10 @@ public class RepositorioUsuarios : IRepositorioUsuarios
     {
         _contexto.Usuarios.Add(usuario);
         await _contexto.SaveChangesAsync();
-        return usuario;
+
+        return await _contexto.Usuarios
+            .Include(u => u.Rol)
+            .FirstAsync(u => u.Id == usuario.Id);
     }
 
     public async Task<Usuario> ActualizarAsync(Usuario usuario)

@@ -46,6 +46,9 @@ builder.Services.AddScoped<IRepositorioUsuarios, RepositorioUsuarios>();
 builder.Services.AddScoped<IRepositorioProductos, RepositorioProductos>();
 builder.Services.AddScoped<IRepositorioCategorias, RepositorioCategorias>();
 builder.Services.AddScoped<IRepositorioRoles, RepositorioRoles>();
+builder.Services.AddScoped<IRepositorioImagenes, RepositorioImagenes>();
+builder.Services.AddScoped<IRepositorioDatosBancarios, RepositorioDatosBancarios>();
+builder.Services.AddScoped<IRepositorioDenuncias, RepositorioDenuncias>();
 
 builder.Services.AddScoped<IServicioSubastas, ServicioSubastas>();
 builder.Services.AddScoped<IServicioPujas, ServicioPujas>();
@@ -73,6 +76,8 @@ builder.Services.AddCors(opciones =>
 
 var app = builder.Build();
 
+AppServiciosProveedor.Instancia = app.Services;
+
 using (var alcance = app.Services.CreateScope())
 {
     var contexto = alcance.ServiceProvider.GetRequiredService<ContextoSubastas>();
@@ -88,6 +93,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("PoliticaCors");
 app.UseMiddleware<MiddlewareExcepciones>();
+
+var rutaImagenes = Path.Combine(builder.Environment.ContentRootPath, "ImagenesProductos");
+Directory.CreateDirectory(rutaImagenes);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(rutaImagenes),
+    RequestPath = "/ImagenesProductos"
+});
+
 app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseAuthentication();

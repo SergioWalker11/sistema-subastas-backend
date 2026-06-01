@@ -18,6 +18,8 @@ public class ContextoSubastas : DbContext
     public DbSet<Puja> Pujas { get; set; }
     public DbSet<Pago> Pagos { get; set; }
     public DbSet<Notificacion> Notificaciones { get; set; }
+    public DbSet<DatosBancarios> DatosBancarios { get; set; }
+    public DbSet<Denuncia> Denuncias { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -37,6 +39,7 @@ public class ContextoSubastas : DbContext
             entity.Property(e => e.NombreCompleto).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Correo).IsRequired().HasMaxLength(150);
             entity.Property(e => e.ContrasenaHash).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.EstaSuspendido).IsRequired();
             entity.HasOne(e => e.Rol)
                 .WithMany(r => r.Usuarios)
                 .HasForeignKey(e => e.RolId);
@@ -136,6 +139,37 @@ public class ContextoSubastas : DbContext
             entity.HasOne(e => e.Usuario)
                 .WithMany(u => u.Notificaciones)
                 .HasForeignKey(e => e.UsuarioId);
+        });
+
+        modelBuilder.Entity<DatosBancarios>(entity =>
+        {
+            entity.ToTable("datos_bancarios");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UsuarioId).IsUnique();
+            entity.Property(e => e.Banco).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.TipoCuenta).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.NumeroCuenta).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Titular).IsRequired().HasMaxLength(100);
+            entity.HasOne(e => e.Usuario)
+                .WithOne(u => u.DatosBancarios)
+                .HasForeignKey<DatosBancarios>(e => e.UsuarioId);
+        });
+
+        modelBuilder.Entity<Denuncia>(entity =>
+        {
+            entity.ToTable("denuncias");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Motivo).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Estado).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.FechaCreacion).IsRequired();
+            entity.HasOne(e => e.Denunciante)
+                .WithMany()
+                .HasForeignKey(e => e.DenuncianteId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.Denunciado)
+                .WithMany()
+                .HasForeignKey(e => e.DenunciadoId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

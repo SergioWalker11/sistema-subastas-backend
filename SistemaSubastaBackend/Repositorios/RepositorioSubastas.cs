@@ -17,7 +17,7 @@ public class RepositorioSubastas : IRepositorioSubastas
     public async Task<List<Subasta>> ObtenerTodasAsync()
     {
         return await _contexto.Subastas
-            .Include(s => s.Producto)
+            .Include(s => s.Producto).ThenInclude(p => p.Imagenes)
             .Include(s => s.Vendedor)
             .ToListAsync();
     }
@@ -25,7 +25,7 @@ public class RepositorioSubastas : IRepositorioSubastas
     public async Task<Subasta?> ObtenerPorIdAsync(int id)
     {
         return await _contexto.Subastas
-            .Include(s => s.Producto)
+            .Include(s => s.Producto).ThenInclude(p => p.Imagenes)
             .Include(s => s.Vendedor)
             .FirstOrDefaultAsync(s => s.Id == id);
     }
@@ -47,7 +47,7 @@ public class RepositorioSubastas : IRepositorioSubastas
     public async Task<List<Subasta>> ObtenerPorEstadoAsync(string estado)
     {
         return await _contexto.Subastas
-            .Include(s => s.Producto)
+            .Include(s => s.Producto).ThenInclude(p => p.Imagenes)
             .Include(s => s.Vendedor)
             .Where(s => s.Estado == estado)
             .ToListAsync();
@@ -56,7 +56,7 @@ public class RepositorioSubastas : IRepositorioSubastas
     public async Task<List<Subasta>> ObtenerPorVendedorAsync(int vendedorId)
     {
         return await _contexto.Subastas
-            .Include(s => s.Producto)
+            .Include(s => s.Producto).ThenInclude(p => p.Imagenes)
             .Include(s => s.Vendedor)
             .Include(s => s.Pujas)
             .Where(s => s.VendedorId == vendedorId)
@@ -66,7 +66,7 @@ public class RepositorioSubastas : IRepositorioSubastas
     public async Task<List<Subasta>> ObtenerTodasConPujasAsync()
     {
         return await _contexto.Subastas
-            .Include(s => s.Producto)
+            .Include(s => s.Producto).ThenInclude(p => p.Imagenes)
             .Include(s => s.Vendedor)
             .Include(s => s.Pujas)
                 .ThenInclude(p => p.Usuario)

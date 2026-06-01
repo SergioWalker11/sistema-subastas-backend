@@ -36,6 +36,9 @@ public class ServicioPujas : IServicioPujas
         if (usuario.Rol?.Nombre == "administrador")
             throw new InvalidOperationException("El administrador no puede participar en subastas");
 
+        if (usuario.Rol?.Nombre == "vendedor")
+            throw new InvalidOperationException("Los vendedores no pueden realizar pujas. Use su cuenta de comprador.");
+
         var ultimaPuja = await _repositorioPujas.ObtenerUltimaPujaAsync(dto.SubastaId);
         var errores = _validadorPujas.ValidarPuja(dto.Monto, subasta, ultimaPuja, dto.UsuarioId);
         if (errores.Count > 0)
