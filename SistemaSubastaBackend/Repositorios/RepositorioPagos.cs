@@ -26,6 +26,7 @@ public class RepositorioPagos : IRepositorioPagos
         return await _contexto.Pagos
             .Include(p => p.Usuario)
             .Include(p => p.Subasta)
+                .ThenInclude(s => s.Vendedor)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
@@ -34,6 +35,7 @@ public class RepositorioPagos : IRepositorioPagos
         return await _contexto.Pagos
             .Include(p => p.Usuario)
             .Include(p => p.Subasta)
+                .ThenInclude(s => s.Vendedor)
             .Where(p => p.UsuarioId == usuarioId)
             .ToListAsync();
     }

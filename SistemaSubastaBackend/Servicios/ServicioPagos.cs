@@ -203,6 +203,8 @@ public class ServicioPagos : IServicioPagos
             Id = pago.Id,
             SubastaId = pago.SubastaId,
             NombreUsuario = pago.Usuario.NombreCompleto,
+            NombreVendedor = pago.Subasta?.Vendedor?.NombreCompleto ?? string.Empty,
+            CorreoVendedor = pago.Subasta?.Vendedor?.Correo ?? string.Empty,
             Monto = pago.Monto,
             CodigoTransaccion = pago.CodigoTransaccion,
             EstadoPago = pago.EstadoPago,

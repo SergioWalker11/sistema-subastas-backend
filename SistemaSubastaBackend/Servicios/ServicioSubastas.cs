@@ -154,6 +154,7 @@ public class ServicioSubastas : IServicioSubastas
                 FechaLimitePago = x.Subasta.FechaLimitePago,
                 Estado = x.Subasta.Estado,
                 NombreVendedor = x.Subasta.Vendedor?.NombreCompleto ?? string.Empty,
+                CorreoVendedor = x.Subasta.Vendedor?.Correo ?? string.Empty,
                 Pagado = pagosSubastaIds.Contains(x.Subasta.Id)
             })
             .ToList();
@@ -184,6 +185,7 @@ public class ServicioSubastas : IServicioSubastas
                 SubastaId = subasta.Id,
                 NombreProducto = subasta.Producto?.Nombre ?? string.Empty,
                 NombreGanador = ultimaPuja?.Usuario?.NombreCompleto,
+                CorreoGanador = ultimaPuja?.Usuario?.Correo,
                 PrecioFinal = ultimaPuja?.Monto ?? subasta.PrecioActual,
                 Estado = subasta.Estado,
                 FechaFin = subasta.FechaFin,

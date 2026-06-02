@@ -9,5 +9,6 @@ public class SubastaGanadaDTO
     public DateTime? FechaLimitePago { get; set; }
     public string Estado { get; set; } = string.Empty;
     public string NombreVendedor { get; set; } = string.Empty;
+    public string CorreoVendedor { get; set; } = string.Empty;
     public bool Pagado { get; set; }
 }
